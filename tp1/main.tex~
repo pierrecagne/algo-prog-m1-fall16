@@ -1,0 +1,50 @@
+% !TEX program = lualatex
+\documentclass[10pt,french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\defaultfontfeatures{Ligatures=TeX}
+\setmainfont{Cambria}
+\setsansfont{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase%
+]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+% \usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP0: découverte de l'environnement}
+\date{13 septembre 2016}
+\author{Algorithmique et projet de programmation --- M1 mathématiques} 
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  basicstyle=\tt\small,%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style=sh]|#1|}
+
+\begin{document}
+\maketitle
+
+\end{document}

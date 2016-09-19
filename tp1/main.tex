@@ -1,0 +1,124 @@
+% !TEX program = lualatex
+\documentclass[10pt,french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\defaultfontfeatures{Ligatures=TeX}
+\setmainfont{Cambria}
+\setsansfont{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase%
+]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+% \usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP1: premiers pas en {\tt C}}
+\date{20 septembre 2016}
+\author{Algorithmique et projet de programmation --- M1 mathématiques} 
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  breaklines=true,%
+  frame=l,%
+  xleftmargin=\parindent,%
+  basicstyle=\ttfamily\small,%
+  keywordstyle=\bfseries\color{green!40!black!80},%
+  showstringspaces=false,%
+  commentstyle=\itshape\color{purple!70},%
+  identifierstyle=\color{blue!80},%
+  stringstyle=\color{red!80},%
+  directivestyle=\color{orange!90!black!80},%
+  % otherkeywords={},%
+  escapeinside={<latex>}{</latex>},%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style=sh]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]|#1|}
+
+\begin{document}
+\maketitle
+
+\section{Intéraction avec l'utilisateur}
+\label{sec:user-io}
+
+Rappelons que l'on utilise la fonction \inlinec{printf}, de la
+bibliothèque \inlinec{stdio.h}, pour afficher des chaînes de caractères
+à l'écran. Le nom de cette fonction signifie {\em print formatted}, ce
+qui signifie qu'elle attend une chaîne de cractère formattée: en
+termes plus simples, son argument est une châine de caractères pouvant
+contenir des ``jokers''. Par exemple:
+\begin{lstlisting}
+  printf("Hello, World!\n");
+
+  int n = 10;
+  while(n>0){
+    printf("%d...", n);
+    n--;
+  }
+  printf("Go!");
+\end{lstlisting}
+
+La fonction {\tt C} qui demande une entrée clavier à l'utilisateur est
+\inlinec{scanf} (pour {\em scan formatted}), située dans la bibliothèque \inlinec{stdio.h}. On se
+contentera de l'utiliser pour demander des {\em nombres} à
+l'utilisateurs, comme suit:
+\begin{lstlisting}
+  int n ;
+  scanf("Choose a number: %d", &n); //remark the &
+\end{lstlisting}
+Remarquez par rapport à l'utilisation de la fonction \inlinec{printf},
+l'argument est préfixé par une esperluette ``\inlinec{&}'' devant le
+nom de variable (ici \inlinec{n}). C'est qu'il faut passer en
+paramètres à \inlinec{scanf} l'{\em adresse} en mémoire de la variable
+\inlinec n et non la variable elle-même: on dit que \inlinec{&n} est
+une référence sur \inlinec n. Vous comprendrez l'exacte signification
+de tout cela quand vous aborderez les pointeurs; en attendant vous
+pouvez juste prétendre que c'est une curiosité de la fonction
+\inlinec{scanf}.
+
+\begin{exercise}
+  Ecrire un programme qui demande deux entiers \inlinec{n} et
+  \inlinec{m} à l'utilisateur et lui renvoie le quotient et le reste
+  de la division euclidienne de \inlinec{n} par \inlinec{m}
+\end{exercise}
+
+\begin{remark}
+  La manipulation d'entiers en {\tt C} ne se limite pas au type
+  \inlinec{int}. Ci-dessous un tableau récapitulatif des différents
+  types, leurs domaines et leurs jokers dans les chaînes formatées:
+  \begin{center}
+    \begin{tabular}{|c|c|c|c|}
+      \hline Nom & Taille & Entiers représentés & Utilisation avec {\tt printf} \\
+      \hline {\inlinec{short}} & 16 bits & de $-2^{15}$ à $2^{15}-1$ & {\inlinec{%hd}} \\
+      \hline {\inlinec{unsigned short}} & 16 bits & de $0$ à $2^{16}-1$ & {\inlinec{%hu}} \\
+      \hline {\inlinec{int}} & 32 bits & de $-2^{31}$ à $2^{31}-1$ & {\inlinec{%d}} \\
+      \hline {\inlinec{unsigned int}} & 32 bits & de $0$ à $2^{32}-1$ & {\inlinec{%u}} \\
+      \hline {\inlinec{long}} & 64 bits & de $-2^{63}$ à $2^{63}-1$ & {\inlinec{%l}} \\
+      \hline {\inlinec{unsigned long}} & 64 bits & de $0$ à $2^{64}-1$ & {\inlinec{%lu}} \\
+      \hline
+    \end{tabular}
+  \end{center}
+\end{remark}
+
+\end{document}

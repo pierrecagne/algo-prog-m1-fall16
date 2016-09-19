@@ -3,12 +3,13 @@
 
 \usepackage{amsmath,amsthm,amssymb}
 \usepackage{fontspec}
-% \usepackage{unicode-math}
+\usepackage{unicode-math}
 \defaultfontfeatures{Ligatures=TeX}
-\setmainfont{XCharter}
-\setsansfont{Libertinus Sans}
-%% \setmathfont{Libertinus Math}
-\setmonofont{Source Code Pro}[Scale=MatchLowercase]
+\setmainfont{Cambria}
+\setsansfont{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase%
+]
 
 \usepackage{stmaryrd}
 \usepackage{polyglossia}
@@ -75,9 +76,9 @@ commande \shell{ls}, on peut entrer \shell{man ls}.
 
 \begin{exercise}
   En {\bf ligne de commande}, créer un dossier \shell{td0} et y
-  télécharger le fichier
-  \url{http://www.normalesup.org/~cagne/tp0.zip}. Extraire le fichier
-  téléchargé à l'aide de la commande \shell{unzip}.
+  télécharger le fichier{} 
+  \url{http://www.normalesup.org/~cagne/teaching/20162017/algo_proj_m1/tp0.zip}. Extraire
+  le fichier téléchargé à l'aide de la commande \shell{unzip}.
 \end{exercise}
 
 \begin{remark}
@@ -86,7 +87,7 @@ commande \shell{ls}, on peut entrer \shell{man ls}.
   RTFM...
 \end{remark}
 
-\section{Le langage C}
+\section{Le langage {\tt C}}
 \label{sec:c-lang}
 
 Le langage \shell{C} est un langage de programmation, au même titre
@@ -101,15 +102,16 @@ manière suivante:
 \begin{itemize}
 \item on écrit un fichier texte avec un éditeur tel \shell{emacs},
   avec une syntaxe bien définie (que l'on va apprendre tout au long du
-  semestre), dont l'extension doit être \shell{.c},disons
+  semestre), dont l'extension doit être \shell{.c}, disons
   \shell{main.c} pour l'exemple,
 \item on appelle un compilateur, usuellement via la ligne de commande,
   sur le fichier \shell{main.c} nouvellement créé; son rôle est de
   {\em traduire} le code source écrit en \shell{C} en code machine
   compréhensible directement par le processeur; on utilisera dans ce
-  cours le compilateur \shell{gcc}, sûrement le plus utilisé au monde,
+  cours le compilateur {\em open source} \shell{gcc}, un des plus
+  utilisé dans le monde du logiciel libre,
 \item on obtient alors en sortie un fichier exécutable, disons
-  \shell{main.out}, q'uon peut alors appeler grâce à la ligne de
+  \shell{main.out}, qu'on peut alors appeler grâce à la ligne de
   commande (presque) comme n'importe quel autre programme.
 \end{itemize}
 
@@ -132,12 +134,21 @@ en paramètre un nom de fichier, ici \shell{main.out}: il sert à
 indiquer le nom du fichier exécutable créé par le compilateur à partir
 du source \shell{main.c}: on peut également ommettre ce flag, mais
 alors l'exécutable obtient par défaut le nom très explicite de
-\shell{a.out}...
+\shell{a.out}... Ce sera probablement les deux flags que vous
+utiliserez le plus dans ce cours, mais n'hésitez pas à aller faire un
+tour sur le manuel (\shell{man gcc}) pour vous faire une idée du
+nombre phénoménale de paramètres possibles que peut prendre
+\shell{gcc}!
 
 On peut maintenant exécuter notre programme simplement en rentrant son
 chemin d'accès. Attention, si on l'exécute depuis le dossier le
 contenant (et c'est le cas le plus fréquent), il faut entrer
-\shell{./main.out} et non pas seulement \shell{main.out}.
+\shell{./main.out} et non pas seulement \shell{main.out}.\footnote{Si
+  l'on omet \shell{./}, le terminal va automatiquement chercher le
+  programme appelé, ici \shell{main.out}, dans des dossiers
+  spécifiques, listés dans une variable
+  \shell{\$PATH}. Vous pouvez vous rendre compte que le dossier courant
+  n'y est pas en tapant simplement {\tt echo \$PATH}. }
 
 \begin{remark}
   L'extension en \shell{.out} n'a rien d'obligatoire. En fait, la
