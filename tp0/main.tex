@@ -1,0 +1,178 @@
+% !TEX program = lualatex
+\documentclass[10pt,french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+% \usepackage{unicode-math}
+\defaultfontfeatures{Ligatures=TeX}
+\setmainfont{XCharter}
+\setsansfont{Libertinus Sans}
+%% \setmathfont{Libertinus Math}
+\setmonofont{Source Code Pro}[Scale=MatchLowercase]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+% \usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP0: découverte de l'environnement}
+\date{13 septembre 2016}
+\author{Algorithmique et projet de programmation --- M1 mathématiques} 
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  basicstyle=\tt\small,%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style=sh]|#1|}
+
+\begin{document}
+\maketitle
+
+Les énoncés (et quelques corrections) des TPs seront mis au fur et à
+mesure sur ma page web, à l'adresse:
+\begin{center}
+  \url{http://www.normalesup.org/~cagne/teaching.html}
+\end{center}
+Les exercices du contrôle continu et le projet de programmation final
+seront à envoyer à l'adresse email
+\href{mailto:pierre.cagne@normalesup.org}
+{\nolinkurl{pierre.cagne@normalesup.org}}.
+
+\section{UNIX et la console}
+\label{sec:unix}
+
+Les machines de l’université utilisent un système d’exploitation
+UNIX-like tel que GNU/Linux, BSD, Solaris, etc. connu pour sa
+puissante console. Il s’agit d’un programme permettant à l’utilisateur
+de réaliser toutes les tâches administratives sur une machine grâce à
+de simples commandes entrées au clavier. En particulier, pour les TPs
+de ce cours, on utilisera la console pour compiler nos programmes C.
+Toute commande possède un manuel accesible en tapant \shell{man
+  [command name]}. Par exemple, pour savoir comment utiliser la
+commande \shell{ls}, on peut entrer \shell{man ls}.
+\begin{exercise}
+  Consulter les manuels des commandes \shell{ls}, \shell{mkdir} et
+  \shell{wget}.
+\end{exercise}
+
+\begin{exercise}
+  En {\bf ligne de commande}, créer un dossier \shell{td0} et y
+  télécharger le fichier
+  \url{http://www.normalesup.org/~cagne/tp0.zip}. Extraire le fichier
+  téléchargé à l'aide de la commande \shell{unzip}.
+\end{exercise}
+
+\begin{remark}
+  Se référer aux pages \shell{man} doit devenir un rélfexe quand vous
+  n'êtes pas sûr de l'utilisation d'une commande. C'est l'esprit
+  RTFM...
+\end{remark}
+
+\section{Le langage C}
+\label{sec:c-lang}
+
+Le langage \shell{C} est un langage de programmation, au même titre
+que \shell{Python}, \shell{Java}, \shell{Scilab}, \shell{R}, etc. que
+vous avez peut-être déjà utilisé. C'est un ``vieux'' langage (il date
+de 1972), ce qui lui fournit à la fois des avantages (large
+communauté, très sûr, optimisé pour la plupart des compilateurs, etc.)
+et des inconvénients (syntaxe lourde, absence des paradigmes
+``nouveaux'', gestion de la mémoire manuelle, etc.). C'est un langage
+{\em compilé}, c'est-à-dire qu'il fonctionne approximativement de la
+manière suivante:
+\begin{itemize}
+\item on écrit un fichier texte avec un éditeur tel \shell{emacs},
+  avec une syntaxe bien définie (que l'on va apprendre tout au long du
+  semestre), dont l'extension doit être \shell{.c},disons
+  \shell{main.c} pour l'exemple,
+\item on appelle un compilateur, usuellement via la ligne de commande,
+  sur le fichier \shell{main.c} nouvellement créé; son rôle est de
+  {\em traduire} le code source écrit en \shell{C} en code machine
+  compréhensible directement par le processeur; on utilisera dans ce
+  cours le compilateur \shell{gcc}, sûrement le plus utilisé au monde,
+\item on obtient alors en sortie un fichier exécutable, disons
+  \shell{main.out}, q'uon peut alors appeler grâce à la ligne de
+  commande (presque) comme n'importe quel autre programme.
+\end{itemize}
+
+Plus spéficiquement, pour compiler un fichier source appelé
+\shell{main.c} en un programme exécutable \shell{main.out}, on se
+place dans le dossier contenant le source et on exécute la commande
+suivante:
+\begin{lstlisting}[style=sh]
+  gcc -Wall -o main.out main.c
+\end{lstlisting}
+On voit que \shell{gcc} prend ici, outre le source \shell{main.c},
+deux autres arguments commençant par des tirets. Ce sont des {\em
+  flags} qui agissent sur le comportement de \shell{gcc}. Le premier,
+\shell{-Wall}, signifie {\em warnings all} et permet d'afficher toutes
+sortes d'avertissements de la part du compilateur: vous êtes libre de
+ne pas utiliser ce flag, mais vous risquez alors d'avoir plus de mal à
+comprendre les erruers de compilations qui pouraient surgir. Le
+deuxième flag est \shell{-o}, signifiant {\em out}, et prend lui-même
+en paramètre un nom de fichier, ici \shell{main.out}: il sert à
+indiquer le nom du fichier exécutable créé par le compilateur à partir
+du source \shell{main.c}: on peut également ommettre ce flag, mais
+alors l'exécutable obtient par défaut le nom très explicite de
+\shell{a.out}...
+
+On peut maintenant exécuter notre programme simplement en rentrant son
+chemin d'accès. Attention, si on l'exécute depuis le dossier le
+contenant (et c'est le cas le plus fréquent), il faut entrer
+\shell{./main.out} et non pas seulement \shell{main.out}.
+
+\begin{remark}
+  L'extension en \shell{.out} n'a rien d'obligatoire. En fait, la
+  norme est plutôt de ne pas utiliser d'extension du tout: pour ouvrir
+  Mozilla Firefox par exemple, on utilise en effet la commande
+  \shell{firefox} et non pas \shell{firefox.out}!
+\end{remark}
+
+\begin{exercise}
+  Compiler le fichier \shell{hello.c} (présent parmi les fichiers
+  extraits précédemment) et exécuter le programme obtenu.
+\end{exercise}
+
+\begin{exercise}
+  Ouvrir le fichier \shell{hello.c} depuis la ligne de commande. Par
+  exemple, si on utilise l'éditeur \shell{emacs}, on exécute la
+  commande:
+  \begin{lstlisting}[style=sh]
+    emacs hello.c &
+  \end{lstlisting}
+  (Le symbole \shell{&} donne l'ordre au terminal de nous rendre la
+  main avant la fin du processus lancé. En effet, on voudrait pouvoir
+  réutiliser la ligne de commande sans avoir à fermer notre éditeur de
+  texte!)
+
+  Essayer de comprendre la syntaxe du document.
+\end{exercise}
+
+\begin{exercise}
+  Modifier le fichier \shell{hello.c} et le recompiler pour voir
+  l'effet de la modification sur l'exécution du programme.
+\end{exercise}
+
+\begin{exercise}
+  Faire de même avec les autres fichiers extraits de \shell{tp0.zip}.
+\end{exercise}
+
+\end{document}
