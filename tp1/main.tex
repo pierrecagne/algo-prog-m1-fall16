@@ -1,15 +1,14 @@
 % !TEX program = lualatex
-\documentclass[10pt,french,a4paper]{article}
+\documentclass[french,a4paper]{article}
 
 \usepackage{amsmath,amsthm,amssymb}
 \usepackage{fontspec}
 \usepackage{unicode-math}
 \defaultfontfeatures{Ligatures=TeX}
-\setmainfont{Cambria}
-\setsansfont{Calibri}
-%\setmathfont{Cambria Math}
-\setmonofont{Consolas}[Scale=MatchLowercase%
-]
+% \setmainfont{Cambria}
+% \setsansfont{Calibri}
+% %\setmathfont{Cambria Math}
+% \setmonofont{Consolas}[Scale=MatchLowercase]
 
 \usepackage{stmaryrd}
 \usepackage{polyglossia}
@@ -19,7 +18,7 @@
 \usepackage{listings}
 \usepackage{hyperref}
 \usepackage{fmtcount}
-% \usepackage{microtype} % uncomment for better rendering
+\usepackage{microtype} % uncomment for better rendering
 
 \setmainlanguage{french}
 
@@ -54,7 +53,7 @@
 \newtheorem*{remark}{Remarque}
 
 \newcommand{\shell}[1]{\lstinline[style=sh]|#1|}
-\newcommand{\inlinec}[1]{\lstinline[style=C]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]°#1°}
 
 \begin{document}
 \maketitle
@@ -85,23 +84,78 @@ contentera de l'utiliser pour demander des {\em nombres} à
 l'utilisateurs, comme suit:
 \begin{lstlisting}
   int n ;
-  scanf("Choose a number: %d", &n); //remark the &
+  printf("Choose a number: ");
+  scanf("%d", &n); //remark the &
 \end{lstlisting}
-Remarquez par rapport à l'utilisation de la fonction \inlinec{printf},
-l'argument est préfixé par une esperluette ``\inlinec{&}'' devant le
-nom de variable (ici \inlinec{n}). C'est qu'il faut passer en
-paramètres à \inlinec{scanf} l'{\em adresse} en mémoire de la variable
-\inlinec n et non la variable elle-même: on dit que \inlinec{&n} est
-une référence sur \inlinec n. Vous comprendrez l'exacte signification
-de tout cela quand vous aborderez les pointeurs; en attendant vous
-pouvez juste prétendre que c'est une curiosité de la fonction
-\inlinec{scanf}.
+Remarquez, par rapport à l'utilisation de la fonction
+\inlinec{printf}, que l'argument est préfixé par une esperluette
+``\inlinec{&}'', ajoutée {\bf juste devant} le nom de variable (ici
+\inlinec{n}). C'est qu'il faut passer en paramètres à \inlinec{scanf}
+l'{\em adresse} en mémoire de la variable \inlinec n et non la
+variable elle-même: on dit que \inlinec{&n} est une référence sur
+\inlinec n. Vous comprendrez l'exacte signification de tout cela quand
+vous aborderez les pointeurs; en attendant vous pouvez juste prétendre
+que c'est une curiosité de la fonction \inlinec{scanf}.
 
 \begin{exercise}
-  Ecrire un programme qui demande deux entiers \inlinec{n} et
+  \'Ecrire un programme qui demande deux entiers \inlinec{n} et
   \inlinec{m} à l'utilisateur et lui renvoie le quotient et le reste
-  de la division euclidienne de \inlinec{n} par \inlinec{m}
+  de la division euclidienne de \inlinec{n} par \inlinec{m}.
 \end{exercise}
+
+\section{Conditions booléennes}
+\label{sec:bool}
+
+Les structures de contrôle {\tt\small if-then-else} permettent
+d'influencer le comportement du programme en fonction de la valeur de
+vérité d'un booléen. Typiquement, ces valeurs booléennes seront de
+comparaisons numériques. Exemple:
+\begin{lstlisting}
+  if(n!=0){
+    printf("Division by %n allowed.\n", n);
+  }
+  else {
+    printf("Division by 0 is not allowed.\n");
+  }
+\end{lstlisting}
+
+Le tableau ci-dessous donne les relations de comparaison numérique en
+{\tt C}:
+\begin{center}
+  \begin{tabular}{|c|c|c|}
+    \hline Relation & Nom & Comportement attendu \\
+    \hline {\inlinec{a<b}} & lesser than & {vrai ssi \inlinec{a} strictement inférieur à \inlinec{b}} \\
+    \hline {\inlinec{a<=b}} & lesser than & {vrai ssi \inlinec{a} inférieur ou égal à \inlinec{b}} \\
+    \hline {\inlinec{a>b}} & lesser than & {vrai ssi \inlinec{a} strictement supérieur à \inlinec{b}} \\
+    \hline {\inlinec{a>=b}} & lesser than & {vrai ssi \inlinec{a} supérieur ou égal à \inlinec{b}} \\
+    \hline {\inlinec{a==b}} & lesser than & {vrai ssi \inlinec{a} égal à \inlinec{b}} \\
+    \hline {\inlinec{a!=b}} & lesser than & {vrai ssi \inlinec{a} différent de \inlinec{b}} \\
+    \hline
+  \end{tabular}
+\end{center}
+
+\noindent On peut également combiner des booléens pour obtenir des
+conditions plus complexes. Les opérations (les plus courantes) sur les
+booléens en {\tt C} sont les suivantes:
+\begin{center}
+  \begin{tabular}{|c|c|c|}
+    \hline Opération & Nom & Comportement attendu \\
+    \hline {\inlinec{bool1 && bool2}} & conjunction & {vrai ssi \inlinec{bool1} et \inlinec{bool2} sont vrais} \\
+    \hline {\inlinec{bool1 || bool2}} & disjunction & {vrai ssi l'un de \inlinec{bool1} et \inlinec{bool2} est vrai} \\
+    \hline {\inlinec{!bool}} & negation & {vrai ssi \inlinec{bool} est faux} \\
+    \hline
+  \end{tabular}
+\end{center}
+
+\begin{exercise}
+  \'Ecrire un programme qui demande à l'utilisateur d'entrer une année
+  et détermine si celle-ci est bissextile. Rappelons qu'une année est
+  bissextile si elle est divisible par 4 mais pas par 100, ou alors
+  par 400.
+\end{exercise}
+
+\section{C'est l'histoire d'un type...}
+\label{sec:type-integers}
 
 \begin{remark}
   La manipulation d'entiers en {\tt C} ne se limite pas au type
@@ -109,16 +163,107 @@ pouvez juste prétendre que c'est une curiosité de la fonction
   types, leurs domaines et leurs jokers dans les chaînes formatées:
   \begin{center}
     \begin{tabular}{|c|c|c|c|}
-      \hline Nom & Taille & Entiers représentés & Utilisation avec {\tt printf} \\
-      \hline {\inlinec{short}} & 16 bits & de $-2^{15}$ à $2^{15}-1$ & {\inlinec{%hd}} \\
-      \hline {\inlinec{unsigned short}} & 16 bits & de $0$ à $2^{16}-1$ & {\inlinec{%hu}} \\
-      \hline {\inlinec{int}} & 32 bits & de $-2^{31}$ à $2^{31}-1$ & {\inlinec{%d}} \\
-      \hline {\inlinec{unsigned int}} & 32 bits & de $0$ à $2^{32}-1$ & {\inlinec{%u}} \\
-      \hline {\inlinec{long}} & 64 bits & de $-2^{63}$ à $2^{63}-1$ & {\inlinec{%l}} \\
-      \hline {\inlinec{unsigned long}} & 64 bits & de $0$ à $2^{64}-1$ & {\inlinec{%lu}} \\
+      \hline Nom & Taille & Entiers représentés & Utilisation avec {\inlinec{printf}} \\
+      \hline {\inlinec{short}} & 16 bits & de $-2^{15}$ à $2^{15}-1$ & {\inlinec{\%hd}} \\
+      \hline {\inlinec{unsigned short}} & 16 bits & de $0$ à $2^{16}-1$ & {\inlinec{\%hu}} \\
+      \hline {\inlinec{int}} & 32 bits & de $-2^{31}$ à $2^{31}-1$ & {\inlinec{\%d}} \\
+      \hline {\inlinec{unsigned int}} & 32 bits & de $0$ à $2^{32}-1$ & {\inlinec{\%u}} \\
+      \hline {\inlinec{long}} & 64 bits & de $-2^{63}$ à $2^{63}-1$ & {\inlinec{\%l}} \\
+      \hline {\inlinec{unsigned long}} & 64 bits & de $0$ à $2^{64}-1$ & {\inlinec{\%lu}} \\
       \hline
     \end{tabular}
   \end{center}
 \end{remark}
+
+\begin{exercise}
+  La suite de Fibonacci est définie par $u_0=1$, $u_1=1$ et
+  $u_n = u_{n-1} + u_{n-2}$ pour tout $n\geq 2$. \'Ecrire un programme
+  qui calcule toutes les valeurs possibles de la suite de Fibonacci et
+  s'arrête quand le résultat dépasse le domaine du type choisi pour
+  représenter les entiers dans votre programme.
+\end{exercise}
+
+\begin{exercise}
+  Modifier le programme précédent pour laisser le choix à
+  l'utilisateur du type à utiliser. Indice : on affichera en début de
+  programme un menu de la forme
+  \begin{lstlisting}[language=sh,identifierstyle=\color{black}]
+  1. short
+  2. unsigned short
+  3. int
+  4. unsigned int
+  5. long
+  6. unsigned long
+  Type to use (enter corresponding number):
+  \end{lstlisting}
+\end{exercise}
+
+\section{Let's play}
+\label{sec:games}
+
+La bibliothèque \inlinec{stdlib.h} contient une fonction qui génère un
+nombre aléatoire: \inlinec{rand()} renvoie un entier aléatoire entre
+\inlinec{0} et une (grande) valeur abitraire fixée par {\tt C} et
+appelée \inlinec{RAND_MAX}. Pour que \inlinec{rand} se comporte
+réellement comme un génrateur aléatoire, il faut l'initialiser avec
+une {\em graine}, par exemple l'heure: \lstinputlisting{random.c}
+
+\begin{exercise}
+  \'Ecrire un programme qui génère un nombre aléatoire entre 0 et un
+  entier \inlinec{n} fixé (exclu).
+\end{exercise}
+
+\begin{exercise}
+  \'Ecrire un jeu du {\em plus ou moins}. Le jeu se déroule comme suit:
+  \begin{enumerate}[label=(\arabic*)]
+  \item un nombre \inlinec{bound} est fixé à l'avance,
+  \item un nombre de coups \inlinec{chances} est fixé à l'avance,
+  \item le programme génère un nombre aléatoirement entre \inlinec{0}
+    et \inlinec{bound},
+  \item l'utilisateur est invité à entrer un nombre et le programme
+    indique si le nombre cherché est plus grand ou plus petit (ou
+    égal),
+  \item on répète cette instruction jusqu'à ce que le joueur trouve le
+    nombre (et dans ce cas il gagne) ou que le nombre de coups soit
+    écoulé (et dans ce cas il perd).
+  \end{enumerate}
+\end{exercise}
+
+\begin{exercise}
+  Améliorer le programme en proposant différent niveau à
+  l'utilisateur. On pourra par exemple afficher un menu en début de
+  programme de la forme:
+  \begin{lstlisting}[language=sh,identifierstyle=\color{black}]
+  1. Level 1 -- number between 0 and 10 -- 5 chances
+  2. Level 2 -- number between 0 and 100 -- 20 chances
+  3. Level 3 -- number between 0 and 100 -- 5 chances
+  4. Level 4 -- number between 0 and 1000 -- 10 chances
+  Level (enter corresponding number):
+  \end{lstlisting}
+\end{exercise}
+
+\begin{exercise}
+  Améliorer encore un peu le jeu en ajoutant une dernière option au
+  menu où on laisse le joueur libre de rentrer lui même les nombres
+  \inlinec{bound} et \inlinec{chances}.
+\end{exercise}
+
+\section{\`A rendre pour le 27 septembre 2016}
+\label{sec:homeworks}
+
+\begin{exercise}
+  \'Ecrire un programme demandant à l'utilisateur de rentrer un entier
+  et retournant si celui-ci est premier ou non. Dans le cas où le
+  nombre n'est pas premier, on affichera le plus petit diviseur
+  (strictement supérieur à 1).
+\end{exercise}
+
+\begin{exercise}
+  Compiler sans le flag \shell{-Wall} et exécuter le programme
+  suivant: \lstinputlisting{weird.c} Le corriger pour qu'il ait le
+  comportement attendu et expliquer (en commentaire de votre code) ce
+  qu'il se passe dans le programme original. Indice: recompiler avec
+  \shell{-Wall}.
+\end{exercise}
 
 \end{document}
