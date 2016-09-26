@@ -1,0 +1,81 @@
+% !TEX program = lualatex
+\documentclass[french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\defaultfontfeatures{Ligatures=TeX}
+\setmainfont{Cambria}
+\setsansfont{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+\usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP2: un peu plus de {\tt C}}
+\date{20 septembre 2016}
+\author{Algorithmique et projet de programmation --- M1 mathématiques} 
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  breaklines=true,%
+  frame=l,%
+  xleftmargin=\parindent,%
+  basicstyle=\ttfamily\small,%
+  keywordstyle=\bfseries\color{green!40!black!80},%
+  showstringspaces=false,%
+  commentstyle=\itshape\color{purple!70},%
+  identifierstyle=\color{blue!80},%
+  stringstyle=\color{red!80},%
+  directivestyle=\color{orange!90!black!80},%
+  % otherkeywords={},%
+  escapeinside={<latex>}{</latex>},%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style=sh]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]°#1°}
+
+\begin{document}
+\maketitle
+
+\section{Comme de par hasard}
+\label{sec:random}
+
+La bibliothèque \inlinec{stdlib.h} contient une fonction qui génère un
+nombre (pseudo)aléatoire: \inlinec{rand()} renvoie un entier aléatoire
+entre \inlinec{0} et une (grande) valeur abitraire fixée par {\tt C}
+et appelée \inlinec{RAND_MAX}. Pour que \inlinec{rand} se comporte
+réellement comme un génrateur aléatoire, il faut l'initialiser avec
+une {\em graine}, par exemple l'heure: \lstinputlisting{random.c}
+
+\begin{exercise}
+  \'Ecrire un programme qui génère un nombre aléatoire entre 0 et un
+  entier \inlinec{n} fixé (exclu).
+\end{exercise}
+
+
+\begin{exercice}
+  
+\end{exercice}
+
+\end{document}
