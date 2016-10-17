@@ -4,7 +4,7 @@
 
 int main(int argc, char** argv){
 
-  srand((unsigned) time(NULL)); //initialize random generation
+  srand(time(NULL)); //initialize random generation
   int r = rand(); //r is now a random number
   printf("%d is random.\n", r);
   

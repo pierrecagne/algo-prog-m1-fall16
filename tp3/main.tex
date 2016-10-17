@@ -1,0 +1,405 @@
+% !TEX program = lualatex
+\documentclass[french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+% \usepackage{unicode-math}
+%\defaultfontfeatures{Ligatures=TeX}
+\setmainfont[Ligatures=TeX]{Cambria}
+\setsansfont[Ligatures=TeX]{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+\usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP3: fonctions, récursivité, complexité}%
+\date{27 septembre 2016}%
+\author{Algorithmique et projet de programmation --- M1
+  mathématiques}%
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  breaklines=true,%
+  frame=l,%
+  xleftmargin=\parindent,%
+  basicstyle=\ttfamily\small,%
+  keywordstyle=\bfseries\color{green!40!black!80},%
+  showstringspaces=false,%
+  commentstyle=\itshape\color{purple!70},%
+  identifierstyle=\color{blue!80},%
+  stringstyle=\color{red!80},%
+  directivestyle=\color{orange!90!black!80},%
+  upquote=true,%
+  otherkeywords={fun_t,arg1_t,arg2_t,typ},%
+  escapeinside={<latex>}{</latex>},%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style=sh]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]°#1°}
+
+\begin{document}
+\maketitle
+
+On s'appliquera, dans tous les exercices, à estimer la complexité des
+algorithmes implémentés.
+
+\medskip
+
+Le prototype d'une fonction {\tt C} est la donnée de son type de
+retour, de son nom et du type de chacun de ses arguments:
+\begin{lstlisting}
+fun_t fun_name (arg1_t, arg2_t, ...);
+/* or */
+fun_t fun_name (arg1_t var1, arg2_t var2, ...);
+\end{lstlisting}
+
+Une bonne pratique de programmation est de déclarer tous les
+prototypes des fonctions présentes dans un fichier {\tt C} en tête de
+celui-ci. Cela permet également d'utiliser les différentes fonctions
+avant même leurs déclarations. Par exemple: \lstinputlisting{proto.c}
+
+
+\section{Récursivité: premier pas}
+\label{sec:rec}
+
+\begin{exercise}[\'Echauffement]
+  \'Ecrire une fonction {\bf récursive} de prototype
+  \begin{lstlisting}
+int gcd (int a, int b);
+  \end{lstlisting}
+  qui calcule le plus grand diviseur commun des deux entiers $a$ et
+  $b$.
+\end{exercise}
+
+\begin{exercise}[Inverse modulaire]
+  \'Ecrire une fonction {\bf récursive} de prototype
+  \begin{lstlisting}
+int mod_inverse (int a , int n);
+  \end{lstlisting}
+  qui retourne l'inverse d'un entier $a$ modulo l'entier $n$ (ou $0$
+  si $a$ n'est pas premier à $n$). Pour cela, on s'inspirera de
+  l'algorithme d'Euclide étendu qui sert à trouver les coefficients de
+  Bézout du couple $(a,n)$, c'est-à-dire des entiers $u$ et $v$ tels
+  que $ua+vn = \operatorname{gcd}(a,n)$.
+\end{exercise}
+
+\section{Exponentiation}
+\label{sec:exp}
+
+\begin{exercise}
+  \'Ecrire une fonction (la plus naïve possible) de prototype
+  \begin{lstlisting}
+int exp_int (int a, int e);
+  \end{lstlisting}
+  qui retourne la valeur de $a^e$.
+\end{exercise}
+
+\begin{exercise}
+  Observer que
+  \begin{displaymath}
+    a^e = \left\{
+      \begin{aligned}
+        (a^{k})^2 &\quad \text{si $e=2k$}\\
+        a(a^{k})^2 &\quad \text{si $e=2k+1$}\\
+      \end{aligned}
+    \right. .
+  \end{displaymath}
+  En déduire une fonction (récursive) de prototype
+  \begin{lstlisting}
+int quick_exp (int a, int e);
+  \end{lstlisting}
+  qui retourne la valeur de $a^e$.
+\end{exercise}
+
+\section{Tests de primalité}
+\label{sec:prime-test}
+
+\begin{exercise}
+  S'inspirer du code écrit pour \inlinec{quick_exp} pour écrire une
+  fonction de prototype
+  \begin{lstlisting}
+int quick_exp_mod (int a, int e, int n);
+  \end{lstlisting}
+  qui retourne la valeur de $a^e \pmod n$. En particulier, la valeur
+  retournée doit être dans l'intervalle entier $[0,n-1]$.
+\end{exercise}
+
+Rappelons rapidement le petit théorème de Fermat: si $p \in \mathbb N$
+est premier, alors pour tout
+$a \in (\mathbb Z/p\mathbb Z) \setminus \{0\}$, on $a^{p-1} = 1$. La
+contraposée de ce théorème nous donne donc une manière d'être sûr
+qu'un entier $n$ n'est pas premier: il suffit de trouver un nombre
+$0<a<n$ tel que $a^{n-1} \neq 1 \pmod n$. On appelle cela le test de
+primalité de Fermat.
+
+\begin{exercise}
+  \'Ecrire une fonction
+  \begin{lstlisting}
+char fermat_test(int n, int k);
+  \end{lstlisting}
+  qui pratique $k$ fois le test de Fermat avec un nombre $0<a<n$
+  aléatoire et qui retourne \inlinec{1} si le nombre $n$ est composé
+  et \inlinec{0} sinon.
+\end{exercise}
+
+Ainsi, si \inlinec{fermat_test(n,k)} renvoie \inlinec{1}, on sait sans
+aucun doute que $n$ est composé. \`A l'inverse, si
+\inlinec{fermat_test(n,k)} renvoie \inlinec{0}, on ne peut pas
+conclure que $n$ est premier: peut-être est-ce un coup de malchance
+qu'on ait tiré aucun $a$ tel que $a^{n-1} \neq 1 \pmod n$. On dira
+alors que le nombre est {\em probablement premier au sens de Fermat}.
+
+Une idée pour augmenter s'assurer qu'un nombre probablement premier
+l'est réellement serait d'augmenter le nombre $k$ de
+tirages. Malheureusement, même en testant tous les tirages possibles,
+on ne s'en sort pas: le test de Fermat n'est pas une caractérisation
+des nombres composés. C'est-à-dire qu'il existe des nombres $n$ {\bf
+  composés} pour lesquels tout $a\in [1,n-1]$ premier à $n$ satisfait
+à l'équation $a^{n-1} = 1 \pmod n$. De tels nombres sont appelés {\em
+  nombres de Carmichael}. Ainsi, si vous utilisez la fonction
+\inlinec{fermat_test} sur un nombre de Carmichael (par exemple 561),
+vous aurez beau augmenter le nombre $k$ de tests, l'algorithme
+répondra à coup sûr \inlinec{0}, vous laissant croire que le nombre
+est très probablement premier alors que ce n'est pas le cas!
+
+\medskip
+
+Le test de primalité de Miller-Rabin raffine le test de Fermat. Il se
+base sur le fait que dans le corps $\mathbb Z/p\mathbb Z$ (pour $p$
+premier), les seules racines carrées de $1$ sont $1$ et $-1$. Ainsi,
+devant la conclusion du théorème de Fermat $a^{p-1} = 1 \pmod p$ pour
+un entier $0<a<p$, on peut prendre des racines carrées successives
+jusqu'à ou bien avoir un exposant impair, ou bien tomber sur
+$-1$. Plus formellement, si $p \in \mathbb N$ est premier, on écrit
+(de façon unique) $p-1 = 2^sd$ avec $d$ impair, et alors pour tout
+entier $a \in [1,p-1]$,
+\begin{displaymath}
+  a^d = 1 \pmod p
+  \quad\text{ou}\quad
+  \exists r \in [0,s-1],\, a^{2^rd} = -1 \pmod p
+\end{displaymath}
+Bien sûr, cette propriété de tient plus nécéssairement si $p$ n'est
+pas premier, et tout nombre $a$ satisfaisant sa négation est appelé un
+témoin de Miller-Rabin pour $p$.
+
+\begin{exercise}
+  \'Ecrire une fonction de prototype
+  \begin{lstlisting}
+char miller_rabin_test(int n, int k)
+  \end{lstlisting}
+  qui effectue le test de Miller-Rabin $k$ fois avec un nombre $0<a<n$
+  tiré au hasard et retourne \inlinec{1} si $n$ est composé et
+  \inlinec{0} sinon.
+\end{exercise}
+
+L'avantage du test de Rabin-Miller est qu'il n'y a pas d'équivalent
+des nombres de Carmichael. Mieux, on a la proposition suivante: pour
+un nombre impair composé $n$, $3/4$ au moins des entiers $1 < a < n$
+sont des témoins de Miller-Rabin pour $n$.
+\begin{exercise}
+  En considérant qu'on tire les entiers de façon uniforme et
+  indépendante dans la fonction \inlinec{miller_rabin_test}, majorer
+  la probabilité (en fonction de $k$) que la fonction
+  \inlinec{miller_rabin_test(n,k)} renvoie \inlinec{0} pour un nombre
+  impair composé $n$.
+\end{exercise}
+
+\section{Représentation binaire}
+\label{sec:binary}
+
+La décomposition d'un entier $n\in \mathbb N$ en base
+$b \in \mathbb N \setminus{0}$ is the unique finite sequence
+$(n_0,\dots,n_k)$ such that
+\begin{displaymath}
+  n = \sum_{i=0}^k n_ib^i
+  \quad\text{et}\quad
+  \forall i \in \mathbb N,\, 0\leq n_i < b.
+\end{displaymath}
+Cette décomposition s'obtient facilement par division euclidienne
+successive de $n$ par $b$.
+
+\medskip
+
+Le but va être de coder des fonctions relatives au changement de
+bases. Pour cela, il faut pouvoir implémenter les séquences finies en
+{\tt C}: on utilise le concept de {\em tableau}. Un tableau $t$ de
+longueur $\ell$ contenant des éléments de type \inlinec{typ} est plus
+ou moins une section de $\ell$ cases mémoires adjacentes chacune de la
+taille nécessaire pour stocker une variable de type \inlinec{typ}. La
+variable $t$ est alors un {\em pointeur} sur la première case de cette
+section. Pour accéder aux autres cases, il suffit de ``sauter'' de
+\inlinec{sizeof(typ)} en \inlinec{sizeof(typ)} à partir de cette
+première case\footnote{Tout ceci peut sembler bien abstrait pour le
+  moment, vous deviendrez plus à l'aise avec ces notions d'ici
+  quelques semaines. Pour le moment, laissez-vous guider par les
+  exemples et appliquez les ``recettes'' données en
+  TPs.}. Heureusement, le langage {\tt C} met en place des outils pour
+faire tout cela assez facilement. Un tableau \inlinec{t} d'éléments de
+type \inlinec{typ} et de longueur $\ell$ est simplement déclaré par
+\inlinec{typ t[}$\ell$\inlinec{]}, où $\ell$ doit être un nombre
+effectif (et non pas une variable de type \inlinec{int} ou autre). On
+accède à la case numéro $i$ avec la syntaxe \inlinec{t[i]}. Attention,
+les cases d'un tableau sont numérotées à partir de $0$ en {\tt C}, ce
+qui veut dire que $i$ doit être compris entre $0$ et
+$\ell-1$. Remarquer qu'un tableau est modifiable {\em en place},
+c'est-à-dire qu'une fonction peut modifier ses valeurs directement.
+
+Considérons l'exemple suivant: \lstinputlisting{array.c}
+
+\begin{exercise}
+  \'Ecrire une fonction de prototype
+  \begin{lstlisting}
+void dec2bin(unsigned int n, char* bin);
+  \end{lstlisting}
+  qui écrit dans le tableau \inlinec{bin} la décomposition binaire
+  (i.e.\ en base $b=2$) de l'entier $n$. Tous les tableaux de votre
+  programme auront une taille arbitraire fixée à l'avance de $32$
+  cases (justifiez!).
+\end{exercise}
+
+\begin{exercise}
+  \'Ecrire la fonction inverse
+  \begin{lstlisting}
+unsigned int bin2dec(char* bin);
+  \end{lstlisting}
+  qui renvoie l'entier dont \inlinec{bin} est la décomposition
+  binaire.
+\end{exercise}
+
+\begin{exercise}
+  Pour rendre les tests des deux fonctions précédentes plus faciles à
+  lire, on peut coder une fonction
+  \begin{lstlisting}
+void pp_bin (char* bin);
+  \end{lstlisting}
+  qui affiche à l'écran l'écriture usuelle en binaire du nombre dont
+  la décomposition est \inlinec{bin}. Par exemple, l'éxécution
+  de:
+  \begin{lstlisting}
+char bin5[32];
+dec2bin(5, bin5);
+pp_bin(bin5);
+  \end{lstlisting}
+  doit afficher à l'écran \shell{101}.
+\end{exercise}
+
+
+\section{\`A rendre pour le 18 octobre 2016}
+\label{sec:homeworks}
+
+\begin{exercise}[Représentation binaires des relatifs]
+  La définition de la décomposition binaire mise en place ci-dessus
+  n'est valable que pour les positifs. Pour coder les entiers
+  négatifs, il suffit de donner leur signe et la décomposition binaire
+  de leur valeur absolue. Il faut donc trouver un artifice qui
+  permette d'incorporer le signe à la décomposition binaire: c'est ce
+  que fait la méthode qui suit et qu'on appelle {\em le complément à
+    2}.
+
+  Avec des tableaux de $0$ et $1$ de $n$ cases, on peut représenter
+  les $2^n$ entiers relatifs contenu dans $[-2^{n-1},2^{n-1}-1]$ où
+  l'on décide de représenter les entiers $k \in [0,2^{n-1}-1]$ par la
+  représentation binaire de $k$, et les entiers $k \in [-2^{n-1},-1]$
+  par la représentation binaire de $2^n+k$. La réprésentation d'un
+  nobre $k$ ainsi obtenu est appelée la représentation en complément à
+  2 de $k$.
+
+  Pour l'exercice, on fixe le nombre de bits $n=32$.
+  \begin{enumerate}[label=(\arabic*)]
+  \item \'Ecrire une fonction \inlinec{char is_pos(char* bin)} qui
+    renvoie 1 si le nombre représenté par \inlinec{bin} en complément
+    à 2 est positif ou nul et 0 s'il est strictement négatif.
+  \item \'Ecrire une fonction \inlinec{void opposite(char* bin, char*
+      opp)} qui écrit dans \inlinec{opp} la représentation en
+    complément à 2 de $-k$, où $k$ est le nombre dont \inlinec{bin}
+    est la représentation en complément à 2.
+  \end{enumerate}
+\end{exercise}
+
+\begin{exercise}
+  Le langage {\tt C} permet en fait de manipuler les entiers dans leur
+  représentation binaire {\bf directement} sans passer par une
+  conversion explicite sous forme de tableau. On dispose de certaines
+  opérations {\em bits à bits}:
+  \begin{center}
+    \begin{tabular}{|c|c|c|}
+      \hline%
+      {\inlinec{a \& b}} & bitwise AND
+      & {\inlinec{5 \& 3} donne \inlinec{1}} \\
+      \hline%
+      {\inlinec{a | b}} & bitwise OR
+      & {\inlinec{5 | 3} donne \inlinec{7}} \\
+      \hline%
+      {\inlinec{a ^ b}} & bitwise XOR
+      & {\inlinec{5 ^ 3} donne \inlinec{6}} \\
+      \hline%
+      {\inlinec{\~a}} & bitwise NOT
+      & {\inlinec{\~22} donne \inlinec{9}} \\
+      \hline%
+      {\inlinec{a >> n}} & right shift by $n$
+      & {\inlinec{22 >> 2} donne \inlinec{5}} \\
+      \hline%
+      {\inlinec{a \<< n}} & left shift by $n$
+      & {\inlinec{22 \<< 1} donne \inlinec{44}} \\
+      \hline%
+    \end{tabular}
+  \end{center}
+  Pour comprendre ce qu'il se passe, il suffit d'écrire chaque entier
+  sous forme binaire et d'effectuer les opérations bit par bit: par
+  exemple l'écriture binaire de $5$ est \shell{101} et celle de $3$
+  est \shell{11}, ainsi l'entier \inlinec{5 & 3} a pour écriture
+  binaire \shell{1}. Pensez-y comme suit:
+\begin{verbatim}
+  101 (binary for 5)     101 (binary for 5)     101 (binary for 5)
+& 011 (binary for 3)   | 011 (binary for 3)   ^ 011 (binary for 3)
+  ---                    ---                    ---
+  001 (binary for 1)     111 (binary for 7)     110 (binary for 6)
+\end{verbatim}
+\begin{verbatim}
+~10110 (binary for 22)     10110 >> 2             10110 << 1
+ -----                     ----------             ----------
+ 01001 (binary for 9)      101 (binary for 5)     101100 (binary for 44)
+\end{verbatim}
+  %
+  \begin{enumerate}[label=(\arabic*)]
+  \item Persuadez-vous (sur papier) que les opérations \inlinec{\%2},
+    \inlinec{/2} et \inlinec{*2} peuvent s'écrire avec les opérations
+    bits à bits.
+  \item En déduire un algorithme calculant le pgcd de deux entiers
+    positifs en exploitant l'observation suivante:
+    \begin{displaymath}
+      \operatorname{gcd}(a,b) = \left\{
+        \begin{aligned}
+          2\operatorname{gcd}(a/2,b/2)
+          &\quad \text{si $a$ et $b$ pairs} \\
+          \operatorname{gcd}(a/2,b)
+          &\quad \text{si $a$ pair et $b$ impair} \\
+          \operatorname{gcd}(a-b,b)
+          &\quad \text{si $a$ et $b$ impairs et $a\geq b$} \\
+        \end{aligned}
+      \right.
+    \end{displaymath}
+  \end{enumerate}
+\end{exercise}
+
+\end{document}

@@ -1,0 +1,112 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{titlepage}[2015/11/30 titlepage]
+
+%% Load additional packages
+
+\RequirePackage{tikz}
+
+%% Macros and redefinitions
+
+\usetikzlibrary{calc,positioning}
+
+\makeatletter
+\newcommand{\bgcolor}[1]{\def\@bgcolor{#1}}
+\newcommand{\abstractlet}[1]{\def\@abstract{#1}}
+\newcommand{\conf}[1]{\def\@conf{#1}}
+\newcommand{\subconf}[1]{\def\@subconf{#1}}
+\newcommand{\logo}[1]{\def\@logo{#1}}
+\newcommand{\otherauthor}[1]{\def\@otherauthor{#1}}
+\newcommand{\mail}[1]{\def\@mail{#1}}
+\newcommand{\license}[1]{\def\@license{#1}}
+
+% \let\oldabstractname\abstractname
+% \renewcommand{\abstractname}{\normalsize\oldabstractname}
+
+% \colorlet{bgcolor}{\@bgcolor}
+
+\newbox\@abstractbox
+\renewenvironment{abstract}{%
+  \global\setbox\@abstractbox=\vbox\bgroup
+  %\hsize=\textwidth\def\baselinestretch{1}%
+  \noindent\unskip\normalsize\textbf{\abstractname}
+  \par\medskip\noindent\unskip\ignorespaces}
+{\egroup}
+
+\renewcommand{\maketitle}{%
+\begin{titlepage}
+  \begin{tikzpicture}[remember picture,overlay]
+    \def\barshift{20em}
+    \fill [fill=\@bgcolor] (current page.west) rectangle (current page.north east);
+    \coordinate (top-bar) at ([xshift=-\barshift,yshift=-5em] current page.north east);
+    \coordinate (bottom-bar) at 
+    ([xshift=-\barshift] current page.east);
+    \draw [white,very thick] (top-bar) -- ([xshift=-20em] current page.east);
+    %
+    \node [anchor=east] at ([xshift=-2em,yshift=-2em] top-bar) 
+    {% \textpdfrender{
+     %  TextRenderingMode=FillStroke,
+     %  FillColor=white,
+     %  % LineCapStyle=Round,
+     %  LineWidth=.3ex}
+      {\huge \color{white} \@conf}};
+    \node [anchor=east] at ([xshift=-2em,yshift=-6em] top-bar) 
+    {\large \color{gray!40} \itshape \@subconf};
+    %
+    \node [anchor=north west] (chess-knight) at ([xshift=\barshift/4] top-bar) {
+      \ifx\@logo\undefined%
+      \null%
+      \else
+      {\includegraphics[width=10em]{\@logo}}%
+      \fi%
+    };
+    \node at ([xshift={(\paperwidth-\barshift)/2},yshift=10em] current page.west)
+    {%
+      \begin{minipage}{1.0\linewidth}%
+        \Huge \sffamily \color{white} \@title%
+      \end{minipage}%
+    };
+    \node [anchor=east] at ([xshift=-2em,yshift=3em] bottom-bar) 
+    {\color{white} \itshape \large \@author};
+    %
+    \node [anchor=north west] (abstract) at 
+    ([yshift=-10em,xshift=\barshift] current page.west) {
+      \hskip 2em
+      \begin{minipage}{1.0\linewidth}
+        \usebox{\@abstractbox}
+         % \begin{abstract}\normalsize
+        %   \@abstract
+        % \end{abstract}
+      \end{minipage}
+    };
+    \node [anchor=north west] (author) at ([yshift=-10em] current page.west) 
+    {
+      \begin{minipage}{.5\linewidth} \flushright
+        {\large \itshape \@otherauthor}
+
+        \vskip 1em
+        
+        \@mail
+      \end{minipage}
+    };
+    \node [anchor=north west] (date) at ([yshift=-10em] author.west) 
+    {
+      \begin{minipage}{.5\linewidth} \flushright
+        {\@date}
+      \end{minipage}
+    };
+    \draw (abstract.north west) -- 
+    ([xshift=\barshift,yshift=3em] current page.south west);
+    %
+    \node [anchor=south west] at 
+    ([xshift={\barshift+1em},yshift=3em] current page.south west) {
+      \begin{minipage}{1.0\linewidth} \footnotesize
+        \@license
+      \end{minipage}
+    };
+  \end{tikzpicture}
+\end{titlepage}
+}
+
+\makeatother
+
+\endinput

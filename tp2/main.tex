@@ -23,7 +23,7 @@
 \setmainlanguage{french}
 
 \title{\sffamily TP2: un peu plus de {\tt C}}
-\date{20 septembre 2016}
+\date{27 septembre 2016}
 \author{Algorithmique et projet de programmation --- M1 mathématiques} 
 
 \lstdefinestyle{sh}{%
@@ -73,9 +73,194 @@ une {\em graine}, par exemple l'heure: \lstinputlisting{random.c}
   entier \inlinec{n} fixé (exclu).
 \end{exercise}
 
+\begin{exercise}
+  \label{exo:simulate-42}%
+  On peut vérifier expérimentalement si le générateur pseudo-aléatoire
+  est correct: écrire un programme qui tire un millions de fois un
+  nombre au hasard entre \inlinec{0} et \inlinec{100} et qui affiche
+  la proportion de \inlinec{42} parmi ce tirage.
+\end{exercise}
 
-\begin{exercice}
+\begin{exercise}
+  \'Ecrire un jeu du {\em plus ou moins}. Le jeu se déroule comme suit:
+  \begin{enumerate}[label=(\arabic*)]
+  \item un nombre \inlinec{bound} est fixé à l'avance,
+  \item un nombre de coups \inlinec{chances} est fixé à l'avance,
+  \item le programme génère un nombre aléatoirement entre \inlinec{0}
+    et \inlinec{bound},
+  \item l'utilisateur est invité à entrer un nombre et le programme
+    indique si le nombre cherché est plus grand ou plus petit (ou
+    égal),
+  \item on répète cette instruction jusqu'à ce que le joueur trouve le
+    nombre (et dans ce cas il gagne) ou que le nombre de coups soit
+    écoulé (et dans ce cas il perd).
+  \end{enumerate}
+\end{exercise}
+
+\begin{exercise}
+  \'Echangez les rôles. C'est-à-dire que c'est maintenant
+  l'utilisateur qui choisit le nombre mystère puis l'ordinateur qui
+  essaye de le deviner: à chaque tour, l'ordinateur propose un nombre
+  et le joueur répond \inlinec{1} si le nombre mystère est plus grand,
+  \inlinec{-1} s'il est plus petit, et enfin \inlinec{0} si
+  l'ordinateur a trouvé le nombre.
+
+  Faites utiliser une stratégie ``bêbête'' à l'ordinateur : à chaque
+  tour, il tire un nombre au hasard (dans l'intervalle) .
+\end{exercise}
+
+\begin{exercise}
+  Améliorer la stratégie de l'ordinateur:
+  \begin{enumerate}[label=(\arabic*)]
+  \item tout d'abord en le faisant choisir un nombre au hasard dans un
+    intervalle plus malin qu'il mettra à jour avec les informations
+    donnés par l'utilisateur à chaque tour,
+  \item puis en lui faisant utiliser la dichotomie: comme
+    précédemment, on met à jour l'intervalle à chaque tour, et on y
+    choisit non plus un élément au hasard mais le milieu pour réduire
+    au maximum la taille de l'intervalle au tour d'après.
+  \end{enumerate}
+\end{exercise}
+
+\section{Des arguments}
+\label{sec:args}
+
+L'avantage d'appeler un programme/logiciel en ligne de commande plutôt
+qu'en cliquant sur une icône est la possibilité de passer des {\em
+  arguments} au dit programme: c'est-à-dire des valeurs que le
+programme pourra utiliser lors de son exécution. Par exemple,
+\shell{firefox "www.google.com"} ouvre Mozilla Firefox directement à
+la page de recherche Google au lieu de la page d'accueil par défaut.
+
+On peut le faire également pour nos programmes écrits en {\tt C}:
+c'est le rôle des deux variables mystérieuses \inlinec{argc} et
+\inlinec{argv} que je vous incite à placer en arguments de
+\inlinec{main}. La variable \inlinec{argc} de type \inlinec{int}
+contient le nombre d'arguments passés au programme tandis que
+\inlinec{argv} de type \inlinec{char**} (tableau de chaînes de
+caractères) contient les arguments eux-même, sous forme de chaînes de
+caractères. Pour accéder à l'argument numéro $i$, on écrit simplement
+\inlinec{argv[i]}. Attention: la numérotation commence à \inlinec{0}
+(et se finit donc à \inlinec{argc-1}), et la première case
+\inlinec{argv[0]} contient toujours le nom du programme lui-même (en
+particulier, \inlinec{argc} est toujours supérieur ou égal à 1).
+
+\begin{exercise}
+  Réécrire le programme du plus ou moins en laissant l'utilisateur
+  passer deux arguments en ligne de commande: le premier sera la borne
+  suprieure (appelée \inlinec{bound} précédemment) et le deuxième le
+  nombre de coups (appelée \inlinec{chances} précédemment). Indice: il
+  faudra utiliser la fonction \inlinec{sscanf(s,format,ref)} qui
+  fonctionne comme \inlinec{scanf} mais prend comme entrée non pas le
+  clavier mais la chaîne \inlinec{s} passée en premier paramètre. Par
+  exemple, \inlinec{sscanf(s,"\%d",\&var)} stocke \inlinec{10} dans la
+  variable \inlinec{var} si la chaîne \inlinec{s} vaut \inlinec{"10"}.
+\end{exercise}
+
+\section{Introduction aux fonctions}
+\label{sec:function}
+
+L'usage des fonctions en {\tt C}, et de manière générale en
+programmation, est double: factoriser et modulariser le code. La {\em
+  factorisation de code} consiste à éviter les répétitions bêtes et
+méchantes de code. Prenons l'exemple d'un programme mettant en jeu
+trois entiers, et qui à un moment donné doit vérifier si ces trois
+entiers sont des carrés parfaits: \lstinputlisting{perfectsq.c} On
+aimerait pouvoir n'écrire qu'une seule fois les instructions
+déterminant si un nombre est un carré parfait puis l'appliquer à
+\inlinec{a}, \inlinec{b} et \inlinec{c} indifféremment. C'est
+exactement ce que réalise une fonction {\tt C}:
+\lstinputlisting{perfectsq_fun.c} Mais les fonctions peuvent aussi
+simplement servir à {\em modulariser} le code. C'est la pratique qui
+consiste à garder séparé dans le code les parties du programme que
+l'on {\em pense séparément}. On illustrera cela tout au long du
+semestre.
+
+Une fonction s'instancie sous la forme suivante:
+\begin{lstlisting}
+return_type function_name(arg_type1 arg1, arg_type2 arg2, ...) {
+  /* code with one or more return of the type return_type */
+}  
+\end{lstlisting}
+Vous avez en fait déjà codé des fonctions {\tt C}. En effet, tous vos
+sources contiennent une fonction \inlinec{main}, où le type de retour
+est \inlinec{int}, et qui prend deux arguments, le premier
+\inlinec{argc} de type \inlinec{int} et le second \inlinec{argv} de
+type \inlinec{char**}. La fonction précédente \inlinec{issquare} a
+quat à elle pour type de retour \inlinec{int} et prend un unique
+argument \inlinec{n} de type \inlinec{int}.
+
+Utiliser une fonction dans votre code est aussi naturel qu'appeler une
+fonction en mathématiques:
+\begin{lstlisting}
+function_name(val1, val2, ...)
+\end{lstlisting}
+\`A ceci près que \inlinec{val1} doit être de type
+\inlinec{arg_type1}, \inlinec{val2} de type \inlinec{arg_type2},
+etc. De même, l'expression \inlinec{function_name(val1,val2,...)} doit
+être utilisée là où est valide un objet de type
+\inlinec{return_type}. Encore une fois, ceci n'est pas une nouveauté,
+vous utilisez les fonctions {\tt C} depuis maintenant deux
+semaines. La fonction \inlinec{printf}, \inlinec{scanf},
+\inlinec{rand}, etc.
+
+\begin{exercise}
+  \'Ecrire une {\bf fonction} de prototype:
+  \begin{lstlisting}
+float simulate(int n, int k, int inf, int sup)
+  \end{lstlisting}
+  Cette fonction doit simuler le tirage répété $n$ fois d'un entier
+  dans un intervalle (d'entiers) $[\mathrm{inf},\mathrm{sup}[$ donné
+  et retourner la fréquence d'apparition de $k$ dans ce tirage.
   
-\end{exercice}
+  Ainsi le programme de l'exercice \ref{exo:simulate-42} doit
+  correspondre au bout de code suivant:
+  \begin{lstlisting}
+printf("42 appears %f%c of the time.\n",
+        simulate(1000000, 42, 0, 100), '%');
+  \end{lstlisting}
+\end{exercise}
+
+\begin{exercise}
+  Améliorer légèrement le programme précédent pour permettre à
+  l'utilisateur de passer en paramètres en ligne de commande le nombre
+  de tirage, le nombre test duquel on renvoie la fréquence, et les
+  bornes de l'intervalle de test.
+\end{exercise}
+
+\section{\`A rendre pour le 4 octobre 2016}
+\label{sec:homework}
+
+\begin{exercise}
+  \'Ecrire une {\bf fonction} \inlinec{prime} de prototype:
+  \begin{lstlisting}
+int prime(unsigned int n)
+  \end{lstlisting}
+  qui prend en argument un entier $n$ positif et renvoie \inlinec{0}
+  s'il n'est pas premier et \inlinec{1} s'il l'est.
+
+  Utiliser cette fonction dans un programme qui affiche la proportion
+  de nombre premier dans l'intervalle $[0,n]$ pour un nombre $t$ de
+  tirage où $n$ et $t$ sont passés en paramètres en ligne de commande
+  par l'utilisateur.
+\end{exercise}
+
+\begin{exercise}
+  Pour tout $m \in \mathbb N$, on définit une suite
+  $(s^m_n)_{n\geq 0}$ donnée par
+  \begin{displaymath}
+    s^m_0 = m \quad \text{et} \quad
+    \forall n>0,\, \left\{
+      \begin{aligned}
+        s^m_n &= \frac{s^m_{n-1}} 2
+        \quad \text{si $s^m_{n-1}$ est pair} \\
+        s^m_n &= 3{s^m_{n-1}}+1 \quad \text{sinon}
+      \end{aligned}
+    \right.
+  \end{displaymath}
+  La conjecture de Syracuse affirme que pour tout $m \in \mathbb N$,
+  la suite $(s^m_n)_{n\geq 0}$ stagne en $1$. \'Ecrire un programme
+  qui vérifie la conjecture de Syracuse pour $m \in [0,100]$.
+\end{exercise}
 
 \end{document}
