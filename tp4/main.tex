@@ -1,0 +1,241 @@
+% !TEX program = lualatex
+\documentclass[french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+% \usepackage{unicode-math}
+%\defaultfontfeatures{Ligatures=TeX}
+\setmainfont[Ligatures=TeX]{Cambria}
+\setsansfont[Ligatures=TeX]{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+\usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP4: tableaux, pointeurs}%
+\date{27 septembre 2016}%
+\author{Algorithmique et projet de programmation --- M1
+  mathématiques}%
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  breaklines=true,%
+  frame=l,%
+  xleftmargin=\parindent,%
+  basicstyle=\ttfamily\small,%
+  keywordstyle=\bfseries\color{green!40!black!80},%
+  showstringspaces=false,%
+  commentstyle=\itshape\color{purple!70},%
+  identifierstyle=\color{blue!80},%
+  stringstyle=\color{red!80},%
+  directivestyle=\color{orange!90!black!80},%
+  upquote=true,%
+  otherkeywords={fun_t,arg1_t,arg2_t,typ},%
+  escapeinside={<latex>}{</latex>},%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style={},style=sh]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]°#1°}
+
+\begin{document}
+\maketitle
+
+\begin{exercise}[Warm up]
+  Créer les fonctions suivantes traitant des tableaux d'entiers:
+  \lstinputlisting{warmup.h}
+\end{exercise}
+
+\section{Tris}
+\label{sec:sort}
+
+Commençons par les tris naïfs, qui s'éxécute en
+$\operatorname{O}(n^2)$.
+
+\begin{exercise}[Par sélection]
+  Le tri par sélection opère de la façon suivante: il parcourt le
+  tableau à la recherche du plus grand élément, puis l'échange avec le
+  dernier élement du tableau ; il cherche ensuite le plus grand
+  élément parmi les valeurs restantes et l'échange avec l'avant
+  dernier élément du tableau ; etc.
+
+  \'Ecrire une fonction qui implémente le tri par sélection:
+  \begin{lstlisting}
+void select_sort (int size, int *array);
+  \end{lstlisting}
+  Indice: en {\tt C}, un tableau de taille $n$ est tout autant un
+  tableau de taille $i<n$.
+\end{exercise}
+
+\begin{exercise}[\`A bulles]
+  Le tri à bulles repose sur le même principe que le tri par
+  sélection: placer l'élément maximal en dernière position et
+  recommencer sur le sous-tableau des éléments restants. En revanche,
+  on ne cherche pas le maximum explicitement: on va le «~faire
+  remonter~» (d'où le nom de {\em tri à bulles}) en inversant
+  localement les valeurs des cases $i$ et $i+1$ quand la première est
+  supérieure à la seconde.
+
+  \'Ecrire une fonction qui implémente le tri à bulles:
+  \begin{lstlisting}
+void bubble_sort (int size, int *array);    
+  \end{lstlisting}
+\end{exercise}
+
+\begin{exercise}
+  Le tri par insertion change le point de vue: considérant que la fin
+  d'un tableau, des indices $i$ à $n-1$, est déjà trié, il suffit
+  d'insérer la valeur de la case $i$ au bon endroit pour avoir une fin
+  triée d'une case de plus. En itérant le processus depuis une fin
+  vide jusqu'à une fin de la taille du tableau, on aura trié le
+  tableau en entier.
+
+  \'Ecrire une fonction qui implémente le tri par insertion:
+  \begin{lstlisting}
+void insert_sort (int size, int i, int *array);    
+  \end{lstlisting}
+  qui suppose que le tableau \inlinec{array} de taille \inlinec{size}
+  est trié entre les index \inlinec{i+1} et \inlinec{n-1}, et qui trie
+  entièrement le tableau \inlinec{array}.
+\end{exercise}
+
+On passe maintenant au tri dont la complexité est
+$\operatorname{O}(n \log n)$.
+
+\begin{exercise}[Rapide]
+  Le tri rapide trie les valeurs entre les cases d'index \inlinec{min}
+  et \inlinec{max} d'un tableau de la façon suivante: on choisit une
+  valeur $p$ (appelée pivot) du tableau à trier (souvent on prend
+  juste la dernière valeur du tableau), puis on met dans n'importe
+  quel ordre tous les éléments inférieurs au pivot à sa gauche et tous
+  les élements supérieurs à sa droite ; on réitère sur chacun des deux
+  sous-tableaux gauche et droit ainsi créés.
+
+  \'Ecrire une fonction qui implémente le tri rapide:
+  \begin{lstlisting}
+void quick_sort (int min, int max, int *array);
+  \end{lstlisting}
+\end{exercise}
+
+\begin{exercise}[Fusion]
+  Le tri fusion se base sur le principe «~diviser pour régner~»: trier
+  un tableau revient à trier la première moitié et la deuxième moitié
+  indépendemment, puis à les fusionner. La fusion suppose voir deux
+  tableaux triés de même taille,qu'elle parcoure simultanément,
+  insérant dans un nouveau tableau le plus petit des deux éléments lus
+  à chaque fois.
+
+  \'Ecrire une fonction:
+  \begin{lstlisting}
+void merge (int start, int mid, int end, int *array);
+  \end{lstlisting}
+  qui suppose que les sous-tableaux
+  \inlinec{\{array[start],...,array[mid-1]\}} et
+  \inlinec{\{array[mid],...,array[end]\}} sont triés, et écrit la
+  fusion des deux dans le sous-tableaux
+  \inlinec{\{array[start],...,array[end]\}}. On n'hésitera pas à
+  utiliser un tableau intermédiaire temporaire (la modification {\em
+    en place} étant difficile à réaliser).
+
+  \'Ecrire une fonction récursive (en s'aidant bien entendu de la
+  fonction précédente) qui implémente le tri fusion pour le
+  sous-tableau compris entre \inlinec{start} et \inlinec{end} d'un
+  tableau \inlinec{array} :
+  \begin{lstlisting}
+void merge_sort (int start, int end, int* array);
+  \end{lstlisting}
+\end{exercise}
+
+\section{Autres exemples}
+\label{sec:other}
+
+\begin{exercise}[Crible d'\'Eratosthène]
+  Au {\sc III}\textsuperscript{e} scièle avant J-C., \'Eratosthène
+  invente une manière astucieuse de générer tous les nombres premiers
+  jusqu'à une certaine borne $n$. Il suffit pour cela d'écrire les
+  entiers de $2$ à $n$ sur une feuille puis de répéter l'action
+  suivante en partant de $2$: si le nombre n'est pas barré, on barre
+  tous ces multiples sauf lui-même ; si le nombre est barré, on passe
+  au suivant. Lorsqu'on arrive à $n$, les nombres non barrés sont
+  exactement ceux qui ne sont multiples de personne à part eux même,
+  c'est-à-dire les nombre premiers.
+
+  Implémenter le crible d'\'Eratosthène en une fonction:
+  \begin{lstlisting}
+void sieve(int n, char *era);
+  \end{lstlisting}
+  où le tableau \inlinec{era} contiendra \inlinec{0} dans les cases
+  indexées par des non-premiers et \inlinec{1} dans celles indexées
+  par des premiers.
+\end{exercise}
+
+\begin{exercise}[Euclide étendu, le retour]
+  Maintenant que l'on connaît les pointeurs, on peut implémenter une
+  version plus simple de l'algorithme d'Euclide étendu. Rappelons que
+  cet algorithme renvoie, pour tout couple $(a,b) \in \mathbb N$, le
+  pgcd de $a$ et $b$, ainsi que deux entiers $u,v \in \mathhbb Z$ tels
+  que $ua+bv = \operatorname{gcd}(a,b)$. Le problème est qu'un
+  programme {\tt C} n'est autorisé à renvoyer qu'une seule valeur!
+  Heureusement, grâce aux pointeurs, on peut contourner ce problème.
+
+  Implémenter l'algorithme d'Euclide comme une fonction récursive de
+  signature:
+  \begin{lstlisting}
+void ext_euclid (int a, int b, int *gcd, int *u, int *v);    
+  \end{lstlisting}
+\end{exercise}
+
+\section{\`A rendre pour la prochaine fois}
+\label{sec:homeworks}
+
+\begin{exercise}~
+  \begin{enumerate}[label=(\roman*)]
+  \item \'Ecrire une fonction, la plus naïve possible, renvoyant la
+    somme maximale que l'on peut obtenir en additionnant des éléments
+    consécutifs d'un tableau \inlinec{array} de taille \inlinec{size}:
+    \begin{lstlisting}
+int max_sum (int size, int *array)
+    \end{lstlisting}
+    Par exemple, la fonction doit renvoyer \inlinec{11} sur le tableau
+    \inlinec{\{-1,1,8,-7,9,-2\}} (réalisé par les éléments consécutifs
+    $1,8,-7,9$).
+  \item Estimer la complexité de la fonction précédente (en fonction
+    de la taille du tableau).
+  \item Le but de cette question est d'obtenir un algorithme plus
+    efficace. Notons $m_i$ la somme maximale d'éléments consécutifs
+    pour le sous-tableau de \inlinec{array} donné par les indexs de
+    $0$ à $i$. Par exemple, $m_0$ est $0$ (la somme vide) si
+    \inlinec{array[0]} est négatif et vaut \inlinec{array[0]} sinon.
+
+    En exprimant $m_{i+1}$ en fonction de $m_i$, écrire une fonction
+    calculant la même chose qu'en question (a) mais plus efficacement:
+    \begin{lstlisting}
+int max_sum_better (int size, int *array);      
+    \end{lstlisting}
+  \item Quelle est la complexité de cette nouvelle fonction ?
+  \end{enumerate}
+
+  Cet exercice est une initiation à une technique que vous allez
+  beaucoup utiliser par la suite: la programmation dynamique.
+\end{exercise}
+
+\end{document}
