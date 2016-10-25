@@ -49,7 +49,7 @@
 
 \title{Projet de programmation en {\tt C}:\\
   solveur de sudoku}
-\date{\`A rendre pour le 01 janvier 2017}
+\date{\`A rendre pour le 14 janvier 2017}
 \author{}
 \otherauthor{Pierre Cagne}
 \conf{%
@@ -93,6 +93,55 @@
 
 \maketitle
 
+%%% main matter
+
+L'implémentation d'un solveur de sudoku peut prendre différentes
+formes. L'idée la plus simple serait de tester toutes les combinaisons
+possibles de remplissage de la grille et de ne garder que celle(s)
+satisfaisant aux règles classiques du sudoku: un unique $i$ par ligne,
+colonne et bloc pour $i \in \{1,\dots,9\}$. C'est ce que l'on appelle
+la méthode {\em brute-force}: elle teste les $m^9$ remplissages
+possibles, $m$ étant le nombre de cases vides de la grille
+(typiquement $m$ est de l'ordre de $60$ à $65$), y compris les
+remplissages les plus stupides, avec par exemple deux $1$ l'un
+à côté de l'autre... Autant dire qu'il y a de la place pour améliorer
+cela!
+
+Le but de ce projet est de vous faire implémenter un solveur plus
+efficace grâce à un processus en trois étapes\footnote{C'est un
+  processus que vous pouvez appliquer à la plupart des problèmes
+  concrets que vous souhaitez résoudre informatiquement.}: une
+modélisation mathématique abstraite du problème à résoudre; un
+traitement algorithmique du problème abstrait ; une implémentation
+efficace de l'algorithme, grâce aux outils du langage à
+disposition. Bien entendu, on n'attend pas de vous que vous fassiez
+tout cela tout seul, et les trois premières parties de ce document
+sont justement là pour vous guider.
+
+La première étape, en section \ref{sec:exact-hit}, peut sembler à
+première vue complexifier le problème. En fait, en incluant le sudoku
+dans une classe plus large de «~puzzles~», on identifie précisément ce
+qui fait la complexité de la résolution d'une grille de sudoku. La
+deuxième étape, présentée en section \ref{sec:algo-sol}, va permettre
+d'encoder les notions abstraites de la première étape comme des objets
+concrets, afin de concevoir un algorithme efficace résolvant le
+problème. Enfin, la troisième étape, en section \ref{sec:dlx}, vous
+invite à utliser tous les outils mis à votre disposition par le
+langage {\tt C} pour coder effectivement les objets et l'algorithme
+pensés à la deuxième étape. La section \ref{sec:actual-project}
+détaille les modalités de rendu du projet.
+
+\begin{remark}
+  Les trois premières parties doivent se lire avec un papier et un
+  stylo à la main, et {\bf surtout pas} avec un clavier et un fichier
+  \shell{.c} ouvert à l'écran...
+\end{remark}
+
+\medskip
+
+Dans tout le document, on fait l'hypothèse que l'on ne manipule que
+des ensembles {\em finis}.
+
 \section{Problème de satisfaction de contraintes}
 \label{sec:exact-hit}
 
@@ -110,12 +159,22 @@ dira dans ce cas que {\em $p$ satisfait la contrainte $c$}.
   Une {\em solution} du problème $(P,C,\mathcal S)$ est un
   sous-ensemble $P^\ast \subseteq P$ tel que toute contrainte
   $c \in C$ soit satisfaite par {\bf exactement une} possibilité
-  $p \in P^\ast$.
+  $p \in P^\ast$. Autrement dit, c'est une fonction $f : C \to P$
+  telle que $f(c) \mathrel{\mathcal S} c$ pour tout $c \in C$.
 \end{definition}
+
+\begin{remark}
+  Attention, le vocabulaire utilisé dans ce document est hautement
+  {\bf non standard}. En particulier, googliser «~problème de
+  satisfaction de contraintes~» ou «~constraint satisfaction problem~»
+  risque de vous emmener vers des considérations mathématiques et
+  algorithmiques qui n'ont que très peu à voir avec les notions
+  présentées ici.
+\end{remark}
 
 Malgré son apparente abstraction, la notion de problème de
 satisfaction de contraintes est omniprésente, en mathématiques comme
-dans la vie courante.
+dans la vie courante. En voici quelques exemples.
 \begin{examples}~
   \begin{enumerate}[label=(\arabic*)]
   \item Soit $X$ un ensemble. Les solutions au problème de
@@ -193,7 +252,7 @@ dans la vie courante.
     il peut modéliser la situation comme un problème de satisfaction
     de contraintes comme suit: l'ensemble $P$ des possibilités est
     l'ensemble des triplets $(x_1,x_2,x_3)$ avec
-    $x_1,x_2,x_3 \in [1,6]$ d'une des formes suivantes:
+    $x_1,x_2,x_3 \in [1,6]\times[1,6]$ d'une des formes suivantes:
     \begin{displaymath}
       \begin{aligned}
         ((i,j+1),(i,j),(i+1,j)) &\qquad
@@ -266,6 +325,7 @@ dans la vie courante.
 \end{question}
 
 \section{Résolution algorithmique}
+\label{sec:algo-sol}%
 
 La question suivante permet de reformuler les problèmes de
 satisfaction de contraintes dans un langage plus adapté à
@@ -328,7 +388,7 @@ $1$ dans chaque colonne.
 \label{sec:dlx}
 
 On sait représenter en {\tt C} une matrice par un tableau de
-tableau. On pourrait donc croire qu'on a tout les outils en main pour
+tableaux. On pourrait donc croire qu'on a tous les outils en main pour
 coder effectivement l'algorithme. Même si cela est vrai dans l'absolu,
 on risque d'être confronté à un problème d'ordre pratique: les
 matrices que l'on manipule sont de grandes tailles, et elle
@@ -567,23 +627,43 @@ Le programme devra accepter un paramètre passé en ligne de commande:
 où \shell{path_to_sudoku_file} est le chemin d'accès à un fichier
 texte au format sudoku (au sens expliqué ci-dessus). L'éxécution devra
 alors renvoyer à l'écran la liste des solutions. Si plusieurs
-solutions existent, elle devront être affichée chacune au format
-sudoku avec une ligne vide les séparant.
+solutions existent, elles devront être affichées, chacune au format
+sudoku, avec une ligne vide les séparant.
+
+\begin{remark}
+  {\bf Attention} de bien respecter ces conventions, une partie de la
+  correction étant automatisée: un petit programme de mon cru testera
+  votre programme sur un grand nombre de sudokus et comparera le
+  résultat à un fichier test contenant les solutions. Tout manquement
+  aux conventions peut donc se solder à un échec du test même si votre
+  algorithme est juste en soi!
+\end{remark}
 
 \medskip
 
-Ce qui est décrit ci-dessus est le «~strict minimum~». C'est-à-dire
-que tout manquement aux prérogatives précédentes se ressentira
-drastiquement dans la note. En revanche, le passage de ces
-prérogatives n'est pas synonyme d'une note fixée : le code lui-même
-sera partie intégrante de l'évaluation (un code concis, clair et
-élégant sera toujours préféré à un code brouillon même si la
-sémantique des programmes résultants est la même). {\bf Dans tous les
-  cas, un code non commenté sera grandement pénalisé.}
+L'implémentation de l'algorithme élaboré dans les parties
+\ref{sec:exact-hit} à \ref{sec:dlx} et le respect des règles décrites
+ci-dessus est le {\em strict minimum}. C'est-à-dire que tout
+manquement aux prérogatives précédentes se ressentira drastiquement
+dans la note. En particulier, on insiste sur le fait que le projet
+rendu doit suivre l'algorithme décrit précédemment! Bien entendu, de
+petites améliorations peuvent être apportées ici et là, mais le coeur
+de l'algorithme doit rester celui développé en partie
+\ref{sec:algo-sol}. Par exemple, un projet résolvant la grille de
+sudoku par {\em brute-force} sera automatiquement écarté.
 
-Toute amélioration du programme sera vivement appréciée et pourra se
-voir attribuer des {\em points bonus}. Voici une liste non-exhaustive
-de personnalisations possibles:
+Ceci étant dit, le passage des prérogatives de cette seciton n'est pas
+synonyme d'une note fixée : le code lui-même sera partie intégrante de
+l'évaluation (un code concis, clair et élégant sera toujours préféré à
+un code brouillon et peu lisible même si la sémantique des programmes
+résultants est la même). {\bf Dans tous les cas, un code non commenté
+  sera grandement pénalisé.}
+
+\medskip
+
+Enfin, toute amélioration du programme sera vivement appréciée et
+pourra se voir attribuer des {\em points bonus}. Voici une liste
+non-exhaustive de personnalisations possibles:
 \begin{itemize}
 \item proposer à l'utilisateur de rentrer la grille de sudoku à
   résoudre lignes à lignes en mode intéractif,
@@ -596,8 +676,8 @@ de personnalisations possibles:
 \item proposer un mode {\em verbose} qui montre toutes les étapes de
   résolution (attention, cela peut vite rendre la sortie indigeste
   pour l'utilisateur),
-\item proposer un mode {\em brute-force} permettant de comparer le
-  temps de calcul avec la méthode implémentée,
+\item proposer {\bf en plus} un mode {\em brute-force} permettant de
+  comparer le temps de calcul avec la méthode implémentée,
 \item etc.
 \end{itemize}
 Pour être évaluée, toute amélioration devra venir avec un
@@ -606,6 +686,18 @@ compatible à la {\em version standard}: c'est-à-dire que si l'on fait
 abstraction des améliorations, le programme doit fonctionner {\bf
   exactement} comme décrit dans les prérogatives à remplir. Un
 manquement à cette dernière règle se verrait très pénalisé, puisque le
-«~strict minimum~» ne serait alors pas atteint.
+{\em strict minimum} ne serait alors pas atteint.
+
+\bigskip
+
+Le projet est à rendre pour le 14 janvier 2017. Vous êtes bien entendu
+invités à collaborer à plusieurs dans votre réflexion, comme sur
+n'importe quel devoir maison. En revanche, le projet final doit être
+fait seul ou en binôme. Nous recommandons vivement l'option binôme: la
+collaboration (souvent à bien plus que deux) est souvent de mise dans
+les projets informatiques {\em de la vie réelle}. On conseille alors
+d'utiliser un logiciel de {\em subversionning} pour vous simplifier la
+tâche: les plus courant sont \shell{git}, \shell{svn} et
+\shell{mercure}.
 
 \end{document}

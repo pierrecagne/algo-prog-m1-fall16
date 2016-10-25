@@ -11,6 +11,7 @@
 int quick_exp_mod (int a, int e, int n);
 int str2int (char* s);
 char fermat_test(int n, int k);
+char fermat_test_witness(int n, int k, int *w);
 int gcd(int a, int b);
 
 int main (int argc, char** argv) {
@@ -23,19 +24,39 @@ int main (int argc, char** argv) {
   srand((unsigned int) time(NULL)); // init seed
   
   int n = str2int(argv[1]), k = str2int(argv[2]);
-  if (fermat_test(n, k)) printf("%d is composite for sure.\n", n);
+  int w; // w will stock a fermat witness
+  if (fermat_test_witness(n, k, &w)) 
+    printf ("%d is composite for sure, because %d^%d = %d != 1 mod %d.\n",
+	    n, w, n-1, quick_exp_mod(w,n-1,n), n);
   else printf("%d might be prime.\n", n);
   
   return EXIT_SUCCESS;
 }
 
+
+// implement fermat test
 char fermat_test(int n, int k) {
   for(int i = 0; i < k; i++) {
     int a;
-    a = (rand() % (n-1)) + 1, printf("a = %d / ",a);// random between 1 and n-1
+    a = (rand() % (n-1)) + 1;
+    // random between 1 and n-1
     if ((quick_exp_mod(a,n-1,n)+n)%n != 1)
-      return printf("try %d: %d^%d = %d mod %d\n",i,a,n-1,quick_exp_mod(a,n-1,n),n),
-1; // fermat witness found
+      return 1; // fermat witness found
+  }
+  return 0; // no fermat witness found
+}
+
+// same as fermat test but stores a fermat witness (if exists) in *wit
+// ; notice how useful pointers can be there
+char fermat_test_witness(int n, int k, int* wit) {
+  for(int i = 0; i < k; i++) {
+    int a;
+    a = (rand() % (n-1)) + 1;
+    // random between 1 and n-1
+    if ((quick_exp_mod(a,n-1,n)+n)%n != 1){
+      *wit = a;
+      return 1; // fermat witness found
+    }
   }
   return 0; // no fermat witness found
 }
@@ -51,7 +72,7 @@ int norm_mod (int a, int n) {
   return ((a%n)+n) % n;
 }
 
-// method of quick_exp_mod can be used to quick multiply modulo
+// method of quick_exp_mod can be used to quick multiply modulo too
 int mult_mod (int a, int b, int n) {
   if (b == 0) return 0;
   int t = mult_mod (a, b/2, n);
