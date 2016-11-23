@@ -1,0 +1,231 @@
+% !TEX program = lualatex
+\documentclass[french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+% \usepackage{unicode-math}
+%\defaultfontfeatures{Ligatures=TeX}
+\setmainfont[Ligatures=TeX]{Cambria}
+\setsansfont[Ligatures=TeX]{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+\usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP7: manipulation de fichiers, modularisation du code}%
+\date{15 novembre 2016}%
+\author{Algorithmique et projet de programmation --- M1
+  mathématiques}%
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  %breaklines=true,%
+  frame=l,%
+  xleftmargin=\parindent,%
+  basicstyle=\ttfamily\small,%
+  keywordstyle=\bfseries\color{green!40!black!80},%
+  showstringspaces=false,%
+  commentstyle=\itshape\color{purple!70},%
+  identifierstyle=\color{blue!80},%
+  stringstyle=\color{red!80},%
+  directivestyle=\color{orange!90!black!80},%
+  upquote=true,%
+  otherkeywords={stack_t,queue_t},%
+  escapeinside={<latex>}{</latex>},%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style={},style=sh]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]°#1°}
+
+\begin{document}
+\maketitle
+
+\section{Commande {\tt sort}}
+\label{sec:sort-unix}
+
+On rappelle qu'on essaye de recoder la commande \shell{sort} des
+sytèmes UNIX, i.e.\ programme qui prend en paramètre un chemin d'accès
+à un fichier texte et qui affiche à l'écran l'ensemble de ses lignes
+triées lexicographiquement.
+
+Lors du TP dernier, on a écrit deux fonctions:
+\begin{lstlisting}
+char compare_str (char* s, char* t);
+void sort_str (char** strs);
+\end{lstlisting}
+La première compare deux chaînes de caratère pour l'ordre
+lexicographique, la deuxième trie (selon votre méthode péférée) un
+tableau de chaînes de caractères.
+
+Il s'agit maintenant d'utiliser ces fonctions pour coder un programme
+complet imitant \shell{sort}. La bibliothèque \inlinec{stdio.h}
+contient les fonctions suivantes afin de lire dans un fichier:
+\lstinputlisting{fopen.c}
+
+\begin{exercise}
+  \label{ex:sort}%
+  \'Ecrire un programme imitant la commande \shell{sort}, qu'on
+  appellera en ligne de commande comme suit:
+  \begin{lstlisting}[style={},style=sh]
+./mysort path/to/my/file
+  \end{lstlisting}
+  où \shell{path/to/my/file} est un chemin d'accès à un fichier texte.
+
+  En particulier, le programme commencera par déterminer le nombre de
+  lignes et la taille maximale des lignes du fichier passé en
+  paramètre pour allouera de la mémoire en quantité suffisante, avant
+  d'appeler la fonction \inlinec{sort_str}.
+\end{exercise}
+
+\section{Votre première bibliothèque}
+\label{sec:own-string}
+
+Dans la suite, on va apprendre à {\em modulariser} son code. Jusqu'à
+maintenant, on a toujours mis tout notre code dans un même fichier:
+imaginer faire cela pour un projet de plusieurs milliers de ligne de
+code... Ce serait un bazar sans nom! Heureusement, le langage {\tt C}
+nous autorise à partitionner notre code en différents fichiers
+communiquant entre eux. En fait, vous utilisez déjà cette
+fonctionnalité du langage quand vous incluez les bibliothèques
+\inlinec{stdio.h} et \inlinec{stdlib.h}.
+
+Au-delà de l'organisation, cette technique permet aussi d'{\em
+  encapsuler} du code: c'est-à-dire de proposer à l'utilisateur (ici
+un autre codeur) une interface pour manipuler des données sans qu'il
+ait à en comprendre l'implémentation. Vous avez vous-même déjà
+expérimenté l'encapsulation en tant qu'utilisateur, pas plus tard qu'à
+l'exercice \ref{ex:sort}, dans la manipulation de fichier: vous n'avez
+pas besoin de connaître tous les détails de la structure
+\inlinec{FILE} car vous avez accès à l'interface que sont les
+fonctions \inlinec{fopen}, \inlinec{fgets}, etc.
+
+Enfin, c'est un bon moyen de maintenir une certaine {\em
+  rétrocompatibilité}. Si demain les créateurs du langage {\tt C}
+change l'implémentation de la structure \inlinec{FILE} (pour s'adapter
+eux-même à un changement de norme dans les systèmes de fichiers par
+exemple), votre programme \shell{sort} continuera de compiler sans
+souci du moment que les prototypes et comportements des fonctions
+\inlinec{fopen}, \inlinec{fgets}, etc. restent les mêmes. En revanche,
+si vous aviez utilisé les champs spécifiques de la structure
+\inlinec{FILE}, votre programme pourrait tout à fait être rendu
+obsolète par une telle mise à jour des créateurs de {\tt C}.
+
+\medskip
+
+Il est temps de passer du côté développeur de l'encapsulation! Vous
+avez sûrement remarqué que l'usage des chaînes de caractères en {\tt
+  C} est très pénible: tous les rouages de leur utilisations sont
+exposés à l'utilisateur, laissant libre cours à une gestion
+schyzophrénique de la mémoire, ce qui résulte généralement en tout un
+tas de \shell{segfault}... On va donc créer une petite bibliothèque
+personnel, nommée \shell{proper_string}, qui va gérer tous les
+problèmes de mémoire en arrière-plan et laisser à l'utilisateur
+seulement l'usage normale des chaînes de caractères.
+
+\begin{exercise}
+  Créer un fichier \shell{proper_string.c} contenant la déclaration
+  d'une structure:
+  \begin{lstlisting}
+struct string_s {
+  int length; // maintain the length of the string
+  char *val; // actual string, without the now useless trailing '\0'
+} string_t;
+// let's now call a proper string avery variable of type string_t
+  \end{lstlisting}
+  
+  \'Ecrire dans ce même fichier les fonctions de manipulation de
+  chaînes de caractères que vous jugez utiles, e.g.:
+  \begin{lstlisting}[breaklines=true]
+/* All functions get a 'ps_' prefix to recall that it is part of the 'proper_string' library' */
+int ps_length (string_t str); // gives back the length of the proper string
+string_t ps_init (const char* str); // transforms an actual C string into a proper string
+string_t ps_empty (); // creates an empty proper string; should be equivalent to ps_init("")
+string_t ps_copy (string_t str); // returns a copy of the proper string str
+string_t ps_concat (string_t fst, string_t snd); // gives back the concatenation of two proper strings
+void ps_print (string_t str); // prints the proper string
+char *ps_toC (string_t str); // transform a proper string into a regular C string, i.e. a char array with trailing '\0'
+
+/* ... whatever you could have wanted when using regular strings ...*/
+  \end{lstlisting}
+\end{exercise}
+
+On a donc dans le fichier \shell{proper_string.c} une implémentation
+des chaînes de caractères et des fonctions de bases permettant de
+manipuler celles-ci. Ce n'est d'ailleurs pas la seule implémentaiton
+possible! Vous pourriez avoir des raisons de choisir une autre
+structure de données pour le champ \inlinec{val}: liste chaînées ou
+doublement chaînées, une table de hashage, etc. Ou bien vous pourriez
+vouloir ajouter d'autres champs: un entier \inlinec{nb_spaces} pour le
+nombre d'espaces, un booléen \inlinec{all_num} pour savoir si tous les
+caractères sont numériques, etc. C'est à vous de voir, en fonction de
+l'utilisation que vous voulez en faire!
+
+Il va falloir maintenant mettre en place l'interface, ce à quoi
+l'utilisateur aura accès: cela se fait par l'intermédiaire d'une {\em
+  header}.
+\begin{exercise}
+  Créer un fichier \shell{proper_string.h} contenant les prototypes
+  des fonctions et des structures auxquelles vous voulez donner accès
+  à l'utilisateur.
+
+  Il faut alors penser à l'inclure dans \shell{proper_string.c}:
+  c'est-à-dire qu'il faut ajouter au préprocessing une nouvelle ligne
+  \begin{lstlisting}
+#include "proper_string.h" // beware, it is quotes, not chevrons
+  \end{lstlisting}
+\end{exercise}
+
+\begin{remark}
+  Remarquez bien qu'il n'y a aucune fonction \inlinec{main} dans le
+  fichier \shell{proper_string.c}. C'est normal car on ne veut pas
+  exécuter directement du code de ce fichier, mais seulement s'en
+  servir comme d'une banque de fonctions.
+\end{remark}
+
+On va maintenant utiliser cette bibliothèque.
+\begin{exercise}
+  \'Ecrire un programme dans un fichier \shell{prog.c} (vou pouvez
+  bien sûr utiliser le nom que vous souhaitez pour le source) qui
+  prend deux chaînes de caractères en paramètres en ligne de commande
+  et qui en fait la concaténation sous forme de \inlinec{string_t} et
+  qui affiche sa longueur.
+
+  Il faudra en particulier inclure \shell{proper_string.h}, et on
+  compilera en rajoutant le fichier annexe \shell{proper_string.c}
+  en argument de \shell{gcc}:
+  \begin{lstlisting}[style={},style=sh]
+gcc -Wall -o myprog prog.c proper_string.c 
+  \end{lstlisting}
+\end{exercise}
+
+
+\section{Pour le 22 novembre}
+\label{sec:homeworks}
+
+\begin{exercise}
+  Recoder la commande {\tt sort} mais en utilisant votre nouvelle
+  bibliothèque de strings. On n'hésitera pas à y ajouter les fonctions
+  nécessaires.
+\end{exercise}
+
+\end{document}

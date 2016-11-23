@@ -1,0 +1,200 @@
+% !TEX program = lualatex
+\documentclass[french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+% \usepackage{unicode-math}
+%\defaultfontfeatures{Ligatures=TeX}
+\setmainfont[Ligatures=TeX]{Cambria}
+\setsansfont[Ligatures=TeX]{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+\usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP5: structures, chaînes de caractères}%
+\date{31 octobre 2016}%
+\author{Algorithmique et projet de programmation --- M1
+  mathématiques}%
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  %breaklines=true,%
+  frame=l,%
+  xleftmargin=\parindent,%
+  basicstyle=\ttfamily\small,%
+  keywordstyle=\bfseries\color{green!40!black!80},%
+  showstringspaces=false,%
+  commentstyle=\itshape\color{purple!70},%
+  identifierstyle=\color{blue!80},%
+  stringstyle=\color{red!80},%
+  directivestyle=\color{orange!90!black!80},%
+  upquote=true,%
+  otherkeywords={},%
+  escapeinside={<latex>}{</latex>},%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style={},style=sh]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]°#1°}
+
+\begin{document}
+\maketitle
+
+\section{Listes chaînées}
+\label{sec:linked-list}
+
+Les listes chaînées sont une structure standard de l'algorithmique et
+sont complémentaires aux tableaux. Un tableau est une structure
+efficace quand on sait à l'avance (une borne sur) le nombre d'éléments
+à stocker: on peut alors accéder aux éléments par leur index en
+$O(1)$. Ce qui permet une telle efficacité est la contiguité des cases
+du tableau en mémoire, ramenant l'accès à la case $i$ à une simple
+addition sur les pointeurs. En revanche, ils sont très inefficace
+concernant l'ajout ou la suppression d'éléments: pour ajouter un
+élément en tête d'un tableau de taille $n$, il faut allouer un tableau
+de taille $n+1$, puis copier l'entièreté du tableau dans les $n$
+dernières cases avant enfin d'affecter la première case à la valeur à
+ajouter... tout cela se fait au mieux en $O(n)$!
+
+Les listes chaînées prennent le point de vue opposées. Au diable la
+contiguité en mémoire et l'arithmétique des pointeurs: une case est
+maintenant stockée avec un pointeur sur la case suivante. Rajouter une
+valeur en tête d'une telle liste est alors un jeu d'enfant: on alloue
+une case mémoire où bon nous semble dans la mémoire (le plus souvent
+sur le tas) et on lui associe un pointeur vers l'ancienne première
+case de la liste. Et tout ça en $O(1)$! Bien entendu, on a perdu
+l'accès à la $i$-ème case en temps constant, il faut maintenant partir
+du premier élément et suivre les pointeurs successifs jusqu'à
+atteindre le $i$-ième élément... Tout dépend donc de ce que l'on veut
+faire, il n'y a pas de solution miracle.
+
+\begin{exercise}
+  Implémenter une structure $\tt C$ codant les listes châinées
+  d'entiers. Indice: au même titre qu'en {\tt C} un tableau d'entiers
+  est en fait un pointeur vers le premier entier de ce tableau, une
+  liste chaînée d'entiers sera un pointeur vers la première instance
+  d'une structure à deux champs:
+  \begin{lstlisting}
+typedef list struct node *;
+    
+struct node {
+  // two fields      
+};
+  \end{lstlisting}
+ 
+  \'Ecrire une fonction renvoyant une liste vide:
+  \begin{lstlisting}
+list new_list ();
+  \end{lstlisting}
+\end{exercise}
+
+\begin{exercise}
+  \'Ecrire une fonction prenant en paramètres une liste et un entier
+  et renvoyant la concaténation de cet entier en tête de liste:
+  \begin{lstlisting}
+list push (list l, int val);
+  \end{lstlisting}
+\end{exercise}
+
+Si les tableaux étaient adaptés à un traitement itératif, les listes
+chaînées, elles, se prêtent plus facilement à un traitement recursif.
+
+\begin{exercise}
+  \'Ecrire une fonction calculant la longueur d'une liste:
+  \begin{lstlisting}
+int length (list l);
+  \end{lstlisting}
+\end{exercise}
+
+\begin{exercise}
+  \'Ecrire une fonction retournant une liste (le dernier élément est
+  maintenant le premier, l'avant-dernier le deuxième, etc.):
+  \begin{lstlisting}
+void reverse (list l);
+  \end{lstlisting}
+  Attention, cette fonction devra avoir une complexité en temps de
+  $O(n)$ (avec $n$ la longueur de la liste).
+\end{exercise}
+
+\section{Manipulation de fichiers}
+\label{sec:sort-unix}
+
+On va maintenant s'atteler à recoder (une version simple de) la
+commande \shell{sort} des sytèmes UNIX. C'est un petit programme qui
+prend en paramètre un chemin d'accès à un fichier texte et affiche à
+l'écran l'ensemble de ses lignes triées alphabétiquement. Ainsi, si un
+fichier \shell{phonebook} contient:
+\lstinputlisting[style={},style=sh]{phonebook.txt}
+L'exécution de la commande \shell{sort phonebook} affichera:
+\begin{lstlisting}[style={},style=sh]
+Adrien 0694367833
+Bernard 0663896735
+Claudia 0642356732
+Clement 0678900034
+Lea 0612673546
+Zaid 0673894765
+\end{lstlisting}
+
+\begin{exercise}
+  \'Ecrire une fonction qui compare deux chaînes de caractères dans
+  l'ordre alphabétique:
+  \begin{lstlisting}
+char compare_str (char* s, char* t);
+  \end{lstlisting}
+  Elle renverra \inlinec{1} si \inlinec{s} est inférieur à \inlinec{t}
+  au sens large et \inlinec{0} sinon. On rappelle que
+  \inlinec{s}${}\leq{}$\inlinec{t} si et seulement si
+  \begin{enumerate}[label=-]
+  \item \inlinec{s} est un préfixe de \inlinec{t}
+  \item il existe $i\geq 0$ tel que \inlinec{s[k] = t[k]} pour tout
+    $0\leq k\leq i-1$ et \inlinec{s[i]}${}\leq{}$\inlinec{t[i]}.
+\end{enumerate}
+
+\end{exercise}
+
+\begin{exercise}
+  \'Ecrire une fonction adaptée des fonctions de tri vues la dernière fois:
+  \begin{lstlisting}
+void sort_str (char** strs);
+  \end{lstlisting}
+  qui trie alphabétiquement un tableau de chaînes de caractères.
+\end{exercise}
+
+Rappelons que pour traiter les fichiers textes, le langage {\tt C}
+dispose des fonction suivantes, disponibles dans la bibliothèque
+\inlinec{stdio.h}: \lstinputlisting{fopen.c}
+
+\begin{exercise}
+  En déduire un programme implémentant la commande \shell{sort}
+  décrite précédemment. En particulier, on déterminera le nombre de
+  lignes et la taille maximale des lignes du fichier passé en
+  paramètre pour allouer un tableau de taille suffisante.
+\end{exercise}
+
+\section{Pour le 7 novembre 2016}
+\label{sec:homeworks}
+
+Déterminer des binômes et commencer à regarder le projet. Préparer des
+questions si besoin à poser la fois prochaine.
+
+\end{document}

@@ -1,0 +1,272 @@
+% !TEX program = lualatex
+\documentclass[french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+% \usepackage{unicode-math}
+%\defaultfontfeatures{Ligatures=TeX}
+\setmainfont[Ligatures=TeX]{Cambria}
+\setsansfont[Ligatures=TeX]{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+\usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP6: manipulation de fichiers, piles et files}%
+\date{8 novembre 2016}%
+\author{Algorithmique et projet de programmation --- M1
+  mathématiques}%
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  %breaklines=true,%
+  frame=l,%
+  xleftmargin=\parindent,%
+  basicstyle=\ttfamily\small,%
+  keywordstyle=\bfseries\color{green!40!black!80},%
+  showstringspaces=false,%
+  commentstyle=\itshape\color{purple!70},%
+  identifierstyle=\color{blue!80},%
+  stringstyle=\color{red!80},%
+  directivestyle=\color{orange!90!black!80},%
+  upquote=true,%
+  otherkeywords={stack_t,queue_t},%
+  escapeinside={<latex>}{</latex>},%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style={},style=sh]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]°#1°}
+
+\begin{document}
+\maketitle
+
+\section{Manipulation de fichiers}
+\label{sec:sort-unix}
+
+On va s'atteler à recoder (une version simple de) la commande
+\shell{sort} des sytèmes UNIX. C'est un petit programme qui prend en
+paramètre un chemin d'accès à un fichier texte et affiche à l'écran
+l'ensemble de ses lignes triées alphabétiquement. Ainsi, si un fichier
+\shell{phonebook} contient:
+\lstinputlisting[style={},style=sh]{phonebook.txt} L'exécution de la
+commande \shell{sort phonebook} affichera:
+\begin{lstlisting}[style={},style=sh]
+Adrien 0694367833
+Bernard 0663896735
+Claudia 0642356732
+Clement 0678900034
+Lea 0612673546
+Zaid 0673894765
+\end{lstlisting}
+
+\begin{exercise}
+  \'Ecrire une fonction qui compare deux chaînes de caractères dans
+  l'ordre lexicographique:
+  \begin{lstlisting}
+char compare_str (char* s, char* t);
+  \end{lstlisting}
+  Elle renverra \inlinec{1} si \inlinec{s} est inférieur à \inlinec{t}
+  au sens large et \inlinec{0} sinon. On rappelle que
+  \inlinec{s}${}\leq{}$\inlinec{t} si et seulement si
+  \begin{enumerate}[label=-]
+  \item \inlinec{s} est un préfixe de \inlinec{t}
+  \item il existe $i\geq 0$ tel que \inlinec{s[k] = t[k]} pour tout
+    $0\leq k\leq i-1$ et \inlinec{s[i]}${}\leq{}$\inlinec{t[i]}.
+\end{enumerate}
+
+\end{exercise}
+
+\begin{exercise}
+  \'Ecrire une fonction adaptée des fonctions de tri vues la dernière fois:
+  \begin{lstlisting}
+void sort_str (char** strs);
+  \end{lstlisting}
+  qui trie alphabétiquement un tableau de chaînes de caractères.
+\end{exercise}
+
+Rappelons que pour traiter les fichiers textes, le langage {\tt C}
+dispose des fonction suivantes, disponibles dans la bibliothèque
+\inlinec{stdio.h}: \lstinputlisting{fopen.c}
+
+\begin{exercise}
+  En déduire un programme implémentant la commande \shell{sort}
+  décrite précédemment. En particulier, on déterminera le nombre de
+  lignes et la taille maximale des lignes du fichier passé en
+  paramètre pour allouer un tableau de taille suffisante.
+\end{exercise}
+
+\section{Piles et files d'attente}
+\label{sec:stack}
+
+La structure de pile ({\em stack} en anglais) est très utile en
+informatique. Notamment, elle modélise bien la forme de la mémoire et
+est donc particulièrement adaptée à l'écriture d'interpréteur (cf.\
+section \ref{sec:homeworks}). Rappelons qu'une pile est une structure
+de données modélisant un ensemble fini et munie de deux fonctions
+dédiées: \inlinec{stack_push} qui va ajouter un élément à la pile (on
+dit parfois {\em empiler}), et \inlinec{stack_pop} qui supprime et
+retourne le dernier élément ajouté à la pile (on dit parfois {\em
+  dépiler}).
+
+Il existe de nombreuses manières d'implémenter les piles. Néanmoins,
+la plupart du temps, on utilise une liste chaînée:
+\inlinec{stack_push} ajoute l'élément en tête de liste, et
+\inlinec{stack_pop} retire la tête de liste. Ces deux actions se font
+donc en temps constant\footnote{Et c'est ça le plus important: quand
+  on manipule des piles, on est amener à empiler et dépiler un très
+  grand nombre de fois.}.
+
+\begin{exercise}
+  \'Ecrire une structure modélisant les piles de chaînes de
+  caractères. (On peut évidemment retourner chercher du code des
+  séances précédentes...)
+\end{exercise}
+
+\begin{exercise}
+  \'Ecrire les fonctions d'empilement et dépilement:
+  \begin{lstlisting}
+stack_t stack_push (char *string, stack_t s);
+char *stack_pop (stack_t s); // here 's' gets modified
+  \end{lstlisting}
+\end{exercise}
+
+\medskip
+
+Les files d'attente ({\em queue} en anglais) jouent un rôle dual à
+celui des piles: elles modélisent tout autant des ensembles finis, et
+viennent également avec deux fonctions dédiées \inlinec{queue_push} et
+\inlinec{queue_pop}. Mais si \inlinec{queue_push} ajoute bien un
+élément à la file d'attente, la fonction \inlinec{queue_pop} supprime
+et retourne l'élément le plus anciennement ajouté à la
+file. C'est-à-dire que si on ajoute à une file vide, d'abord $1$ puis
+$2$ puis $3$, la fonction \inlinec{queue_pop} doit retourner $1$
+(alors que la même opération sur une pile aurait retourné $3$).
+
+La structure classique implémentant les files d'attente sont les
+listes {\em doublement} chaînées. Cette structure est très proche des
+listes chaînées mais chaque cellule comporte deux pointeurs: un vers
+la cellule suivante (comme pour les listes chaînées) et un vers la
+cellule précédente. Remarquons alors qu'il n'y a plus de {\em sens}
+dans une liste doublement chaînée (qui est la tête?). Ainsi, au même
+titre qu'on identifiait une liste chaînée avec un pointeur sur la
+première cellule, on identifie une liste doublement chaînée avec un
+couple de pointeurs, un pour chaque extrêmité de la liste. La fonction
+\inlinec{queue_push} ajoute alors un élément à une extrêmité, tandis
+que \inlinec{queue_pop} retire un élément à l'autre.
+
+\begin{exercise}
+  \'Ecrire une structure modélisant les files d'attente de
+  chaînes de caractères. Indice: cela aura la forme suivante
+  \begin{lstlisting}
+typedef struct cell_s cell_t;
+typedef struct queue_s queue_t;
+
+struct cell_s {
+  /* ... inspired from cells of linked list ... */
+};
+struct queue_s {
+  cell_t* first;
+  cell_t* last;
+};
+  \end{lstlisting}
+\end{exercise}
+
+\begin{exercise}
+  \'Ecrire les fonctions:
+  \begin{lstlisting}
+queue_t queue_push (char *string, queue_t q);
+char *queue_pop (queue_t q); // here 'q' gets modified
+  \end{lstlisting}
+\end{exercise}
+
+\section{Pour le 15 novembre 2016}
+\label{sec:homeworks}
+
+\`A partir de maintenant, le projet doit être la priorité. Aussi les
+exercices à rendre d'une séance sur l'autre deviennent-t-ils
+facultatifs. Néanmoins, j'invite quiconque ayant le temps de les faire
+et de les envoyer par mail comme auparavant.
+
+\begin{exercise}[Calculatrice]
+  %
+  Le but de cet exercice est d'implémenter une calculatrice en
+  utilisant la syntaxe dite {\em polonaise}. Dans cette syntaxe, on
+  marque les opérations $+,*,-,/$ en préfixe de ces arguments: par
+  exemple, on écrit \shell{+ 1 2} pour $1+2$. Cela a l'avantage de ne
+  pas avoir à parenthèser son calcul. En effet, en notation habituelle
+  (on dit notation {\em infixe}), le calcul $1+2*3$ peut-être
+  interprété comme: $(1+2)*3$ ou $1+(2*3)$; la notation polonaise les
+  distingue d'emblée: le premier étant \shell{* + 1 2 3} et le
+  deuxième \shell{+ 1 * 2 3}.
+  %
+  \begin{enumerate}
+  \item \'Ecrire une fonction
+    \begin{lstlisting}
+stack_t str_to_stack (char *s);
+    \end{lstlisting}
+    qui prend en paramètre une chaîne de caractères contenant une
+    suite d'opérations en notation polonaise et qui retourne une pile
+    de chaînes de caractères contenant l'empilement successif des
+    chaînes de caractères rencontrées (en considérant qu'un espace
+    sépare deux telles chaîens). Par exemple, dépiler et afficher tous
+    les éléments de \inlinec{str_to_stack("+ 1 * 2 3")} doit donner
+    \shell{ 3 2 * 1 +}.
+  \item \'Ecrire une fonction récursive
+    \begin{lstlisting}
+int compute (stack_t s);
+    \end{lstlisting}
+    qui maintient une deuxième pile \inlinec{t} de la manière suivante
+    tant que \inlinec{s} n'est pas vide:
+    \begin{itemize}
+    \item on dépile \inlinec{s},
+    \item soit l'élément dépilé est une chaîne de caractères contenant
+      un entier, auquel cas on l'empile sur \inlinec{t},
+    \item soit l'élément dépilé est un des 4 caractères suivants:
+      \inlinec{"+"},\inlinec{"*"},\inlinec{"-"},\inlinec{"/"}; on
+      dépile alors deux fois \inlinec{t} et on effectue l'opération
+      avec ces deux éléments dépilés, avant d'ampiler le résultat
+      (sous forme de chaîne de caractères) sur \inlinec{t}.
+    \end{itemize}
+    Quand la pile \inlinec{s} est vide, \inlinec{t} doit contenir une
+    unique case contenant le résultat (sous forme de chaîne de
+    caractères).
+  \item Coder une calculatrice complète, demandant à l'utilisateur de
+    rentrer un calcul en notation polonaise et retournant le résultat
+    de ce calcul.
+  \end{enumerate}
+\end{exercise}
+
+\begin{exercise}[Plus difficile]
+  Dans l'exercice précédent, la fonction \inlinec{compute} est obligée
+  de manipuler des châines de caratères alors qu'on sait bien qu'on
+  manipule en fait des entiers stockés dans de telles chaînes et des
+  opérations. On peut éviter cela, à condition que les cellules de
+  notre pile soit un peu plus élaborées.
+
+  En utilisant le mot clé \inlinec{union}, créer un type qui peut
+  contenir alternativement des entiers et des caractères. Implémenter
+  les piles pour ce nouveau type. Modifier le programme précédent pour
+  qu'il manipule des piles de ce type.
+\end{exercise}
+
+\end{document}
