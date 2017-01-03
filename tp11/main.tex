@@ -1,0 +1,185 @@
+% !TEX program = lualatex
+\documentclass[french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+% \usepackage{unicode-math}
+%\defaultfontfeatures{Ligatures=TeX}
+\setmainfont[Ligatures=TeX]{Cambria}
+\setsansfont[Ligatures=TeX]{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+%\usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP11: graphes}%
+\date{13 décembre 2016}%
+\author{Algorithmique et projet de programmation --- M1
+  mathématiques}%
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+  deletekeywords={hash,type},%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  %breaklines=true,%
+  frame=l,%
+  xleftmargin=\parindent,%
+  basicstyle=\ttfamily\small,%
+  keywordstyle=\bfseries\color{green!40!black!80},%
+  showstringspaces=false,%
+  commentstyle=\itshape\color{purple!70},%
+  identifierstyle=\color{blue!80},%
+  stringstyle=\color{red!80},%
+  directivestyle=\color{orange!90!black!80},%
+  upquote=true,%
+  morekeywords={typ},%
+  escapeinside={<latex>}{</latex>},%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style={},style=sh]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]°#1°}
+
+\begin{document}
+\maketitle
+
+Dans ce TP, on s'intéresse aux graphes finis simples, c'est-à-dire aux
+couples $(V,E)$ avec $V$ un ensemble fini et $E \subseteq V\times V$
+une relation binaire anti-réflexive et symétrique. On nomme les
+éléments de $V$ des {\em sommets} et ceux de $E$ des {\em arêtes}.
+
+Pour représenter un graphe $(V,E)$ de sommets $v_0,\dots,v_{n-1}$, on
+peut utiliser
+\begin{itemize}
+\item une matrice $A = (a_{i,j})_{0\leq i,j\leq n-1}$, dite
+  {\em matrice d'adjacence}, définie par:
+  \begin{displaymath}
+    a_{i,j} = 
+    \left\{
+      \begin{aligned}
+        1 \quad &\text{si } (v_i,v_j) \in E\\
+        0 \quad &\text{sinon}
+      \end{aligned}
+    \right.
+  \end{displaymath}
+\item ou un vecteur $t = (t_i)_{0\leq i \leq n-1}$ d'ensembles finis
+  défini par:
+  \begin{displaymath}
+    t_i = \{ j : (v_i,v_j) \in E \}
+  \end{displaymath}
+\end{itemize}
+
+Pour représenter les ensembles finis du vecteur d'adjacence, on va
+utiliser une structure inspirée des listes chainées.
+\begin{exercise}
+  \'Ecrire une petite bibliothèque (création, ajout, suppression,
+  impression, etc.) portant sur les {\em listes circulaires doublement
+    chainées}, i.e.
+\begin{lstlisting}
+typedef struct node_s* cdll; // circular doubly linked list
+
+struct node_s {
+  int key;
+  cdll left, right;
+};
+\end{lstlisting}
+\end{exercise}
+
+% \begin{exercise}
+%   \'Ecrire la matrice d'adjacence du graphe suivant:
+%   \begin{center}
+%     \begin{tikzpicture}[%
+%       every node/.style = {%
+%         draw = black,%
+%         circle%
+%       }%
+%       ]%
+%       \node (A) at (0,0) {$v_0$};
+%       \node (B) at (2,1) {$v_1$};
+%       \node (C) at (2,-1) {$v_2$};
+%       \node (D) at (4,0) {$v_3$};
+%       \draw (A) to (B);
+%       \draw (B) to (C);
+%       \draw (A) to (C);
+%       \draw[bend right=5] (A) to (D);
+%       \draw (C) to (D);
+%     \end{tikzpicture}
+%   \end{center}
+%   Que remarquez-vous? Pouviez-vous le prévoir?
+% \end{exercise}
+\begin{exercise}
+  \'Ecrire une fonction \inlinec{cdll* mat_to_vec (int** adj, int n)}
+  qui prend en paramètres une matrice d'adjacence d'un graphe et son
+  nombre \inlinec{n} de sommets, et qui retourne le vecteur
+  d'adjacence de ce même graphe.
+\end{exercise}
+
+\medskip
+
+On va implémenter l'agorithme d'Hierholzer qui détermine un {\em
+  circuit eulérien} dans un graphe quand il existe. On rappelle qu'un
+circuit eulérien est un chemin du graphe partant d'un sommet $v$,
+finissant au sommet $v$ et passant par chaque arête une et une seule
+fois.
+
+\begin{exercise}
+  Montrer qu'un graphe fini simple admet un circuit eulérien si et
+  seulement si il est connexe et le degré de tous ses sommets est pair.
+\end{exercise}
+
+L'algorithme d'Hierholzer fonctionne sur un graphe connecté avec
+sommets de degré pair comme suit:
+\begin{itemize}
+\item choisir un sommet $v$ quelconque et trouver un circuit simple
+  basé en $v$, i.e.\ un chemin de $v$ à $v$ utilisant une arête au
+  plus une fois,
+\item tant que le circuit construit n'est pas eulérien, choisir un
+  sommet $u$ le long du circuit ayant des arêtes adjacentes non
+  parcourue et trouver un circuit simple basé en $u$ n'utilisant que
+  des arêtes alors non parcourue ; puis combiner ce circuit au circuit
+  basé en $v$.
+\end{itemize}
+Le circuit devient ultimement eulérien, et l'algorithme s'arête alors.
+
+On représentera en {\tt C} un circuit d'un graphe comme la liste
+circulaire doublement chainée (\inlinec{cdll}) des sommets parcourus.
+
+\begin{exercise}
+  \'Ecrire une fonction
+\begin{lstlisting}
+cdll cycle_from (int i, int n, cdll* unused, cdll rvertex);
+\end{lstlisting}
+  qui trouve un circuit simple basé en $i \in \{0,\dots,n-1\}$ dans un
+  graphe à $n$ sommets. Le tableau \inlinec{unused} contient en case
+  $j$ les listes des arêtes restantes à emprunter depuis $j$: toute
+  arête choisie doit en particulier en être retirée. On maintiendra
+  également la liste \inlinec{rvertex} des sommets ayant encore des
+  arêtes adjacentes non visitées.
+\end{exercise}
+
+\begin{exercise}
+  En déduire une implémentation de l'algorithme de Hierholzer:
+\begin{lstlisting}
+cdll euler_cycle (cdll* graph, int n);
+\end{lstlisting}
+\end{exercise}
+
+\end{document}

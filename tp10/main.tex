@@ -1,0 +1,145 @@
+% !TEX program = lualatex
+\documentclass[french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+% \usepackage{unicode-math}
+%\defaultfontfeatures{Ligatures=TeX}
+\setmainfont[Ligatures=TeX]{Cambria}
+\setsansfont[Ligatures=TeX]{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+%\usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP10: programmation dynamique}%
+\date{6 décembre 2016}%
+\author{Algorithmique et projet de programmation --- M1
+  mathématiques}%
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+  deletekeywords={hash,type},%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  %breaklines=true,%
+  frame=l,%
+  xleftmargin=\parindent,%
+  basicstyle=\ttfamily\small,%
+  keywordstyle=\bfseries\color{green!40!black!80},%
+  showstringspaces=false,%
+  commentstyle=\itshape\color{purple!70},%
+  identifierstyle=\color{blue!80},%
+  stringstyle=\color{red!80},%
+  directivestyle=\color{orange!90!black!80},%
+  upquote=true,%
+  morekeywords={typ},%
+  escapeinside={<latex>}{</latex>},%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style={},style=sh]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]°#1°}
+
+\begin{document}
+\maketitle
+
+\section{Problème du sac à dos}
+\label{sec:knapsack}
+
+Vous êtes un voleur cambriolant une bijouterie. Vous disposez d'un sac
+d'une contenance $W$ et vous connaissez le poids $w_i$ et la valeur
+$v_i$ de chacun des $i\in \{1,\dots, n\}$ objets présents dans la
+bijouterie. Votre but est de maximiser le butin que vous pouvez
+transporter dans votre sac.
+
+Pour ce faire, on va invoquer les techniques de programmation
+dynamique.
+
+\begin{exercise}
+  Notons $m_{i,w}$ le butin maximal que l'on peut obtenir avec un sac
+  de contenance $w$ et en ne regardant que les objets $1,\dots,i$.
+
+  Exprimer $m_{i,w}$ en fonction de $m_{i-1,w}$, $m_{i-1,w-w_i}$ et
+  $v_i$ en considérant la dichotomie suivante:
+  \begin{itemize}
+  \item soit $w_i > w$, auquel cas on ne peut même pas prendre l'objet
+    $i$ dans le sac,
+  \item soit $w_i \leq w$ et il faut déterminer si prendre l'objet $i$
+    est plus rentable que de le laisser sur place.
+  \end{itemize}
+\end{exercise}
+
+\begin{exercise}
+  En déduire un algorithme récursif naïf calculant la valeur
+  souhaitée, à savoir $m_{n,W}$. (Il n'est pas nécéssaire de
+  l'implémenter en {\tt C}.)
+\end{exercise}
+
+On effectue maintenant l'optimisation propre à la programmation
+dynamique, la mémoization.
+
+\begin{exercise}
+  \'Ecrire une fonction {\tt C} de prototype:
+\begin{lstlisting}
+int memoized_knapsack (int *values, int *weights, int i, int w,
+                       int **computed);
+\end{lstlisting}
+  Elle prendra en paramètres un tableau \inlinec{values} contenant en
+  case $j$ la valeur $v_j$, un tableau \inlinec{weights} contenant en
+  case $j$ le poids $w_j$, deux index $i$ et $w$ et une matrice
+  \inlinec{computed}. Cette dernière contient en case $(i,w)$
+  \begin{itemize}
+  \item la valeur $m_{i,w}$ définie précédemment si elle a déjà été calculée,
+  \item la valeur $-1$ sinon.
+  \end{itemize}
+  La fonction doit renvoyer l'entier $m_{i,w}$.
+\end{exercise}
+
+Il s'agit maintenant de mettre en place la deuxième technique propre à
+la programmation dynamique: se «~laisser des indices~» lors du
+remplissage du tableau \inlinec{computed} afin de pouvoir remonter les
+choix faits lors de la résolution récursive.
+
+\begin{exercise}
+  Modifier légèrement la fonction précédente de façon à obtenir un
+  fonction
+\begin{lstlisting}
+int memoized_knapsack (int *values, int *weights, int i, int w,
+                       int **computed, int **choices);
+\end{lstlisting}
+  où tous les paramètres restent les même que précédemment et où la
+  matrice \inlinec{choices} contient en case $(i,w)$
+  \begin{itemize}
+  \item soit $0$ si on sait qu'on ne choisit pas l'objet $i$,
+  \item soit $1$ si on sait qu'on choisit l'objet $i$,
+  \item soit $-1$ si la valeur n'est pas encore calculée.
+  \end{itemize}
+\end{exercise}
+
+\begin{exercise}
+  En déduire une fonction
+\begin{lstlisting}
+int knapsack (int *values, int *weights, int n, int W);
+\end{lstlisting}
+  résolvant notre problème de voleur.
+\end{exercise}
+
+\end{document}

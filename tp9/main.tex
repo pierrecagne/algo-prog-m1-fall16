@@ -1,0 +1,261 @@
+% !TEX program = lualatex
+\documentclass[french,a4paper]{article}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+% \usepackage{unicode-math}
+%\defaultfontfeatures{Ligatures=TeX}
+\setmainfont[Ligatures=TeX]{Cambria}
+\setsansfont[Ligatures=TeX]{Calibri}
+%\setmathfont{Cambria Math}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+%\usepackage{microtype} % uncomment for better rendering
+
+\setmainlanguage{french}
+
+\title{\sffamily TP9: Programmation dynamique et fonction de hashage}%
+\date{29 novembre 2016}%
+\author{Algorithmique et projet de programmation --- M1
+  mathématiques}%
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+  deletekeywords={hash,type},%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  %breaklines=true,%
+  frame=l,%
+  xleftmargin=\parindent,%
+  basicstyle=\ttfamily\small,%
+  keywordstyle=\bfseries\color{green!40!black!80},%
+  showstringspaces=false,%
+  commentstyle=\itshape\color{purple!70},%
+  identifierstyle=\color{blue!80},%
+  stringstyle=\color{red!80},%
+  directivestyle=\color{orange!90!black!80},%
+  upquote=true,%
+  morekeywords={typ},%
+  escapeinside={<latex>}{</latex>},%
+}
+\lstset{style=C}
+
+\theoremstyle{definition}
+\newtheorem{exercise}{Exercice}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remarque}
+
+\newcommand{\shell}[1]{\lstinline[style={},style=sh]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]°#1°}
+
+\begin{document}
+\maketitle
+
+\section{Plus long sous-mot commum}
+\label{sec:lcs}
+
+Rappelons qu'un alphabet $\Sigma$ est juste un ensemble fini dont on
+appelle les éléments {\em lettres}. Un mot $w$ sur un alphabet
+$\Sigma$ est une séquence finie $(a_1,\dots,a_n)$ avec tous les
+$a_i \in \Sigma$. On ommettra les parenthèses et les virgules, non
+nécessaires, et on notre $w = a_1\dots a_n$. La longueur d'un mot est
+simplement le nombre de lettres qui le composent. L'ensemble de tous
+les mots sur un alphabet $\Sigma$ est noté $\Sigma^\ast$.
+
+Un sous-mot d'un mot $w = a_1\dots a_n \in \Sigma^\ast$ est un mot
+$u \in \Sigma^\ast$ tel qu'il existe des indices
+$1\leq i_1<\dots<i_k \leq n$ tels que $u = a_{i_1} \dots a_{i_k}$. En
+français, c'est dire qu'en supprimant certaines lettres de $w$, on
+tombe sur $u$. On s'intéresse ici à développer un algorithme renvoyant
+un sous-mot le plus grand possible commun à deux mots
+$w,w' \in \Sigma^\ast$ donnés.
+
+En écrivant $w = a_1 \dots a_n$ et $w' = b_1 \dots b_m$ (avec
+$a_i,b_j \in \Sigma$), on peut caractériser les sous-mots communs de
+taille maximale comme suit:
+\begin{itemize}
+\item soit $n$ ou $m$ est nul et le seul sous-mot commun est le
+  séquence vide $\varepsilon$ de longueur $0$,
+\item soit $a_n = b_m = x$, et tout sous-mot commun maximal $u$ de
+  $a_1\dots a_{n-1}$ et $b_1\dots b_{m-1}$ donne un sous-mot commun
+  maximal $ux$ de $w$ et $w'$,
+\item soit $a_n\neq b_m$ et un sous-mot commun maximal de $w$ et $w'$
+  est un sous-mot maximal commun de $w$ et $b_1\dots b_{m-1}$ ou de
+  $a_1\dots a_{n-1}$ et $w'$.
+\end{itemize}
+
+\begin{exercise}
+  En déduire un algorithme récursif donnant la longueur d'un sous-mot
+  maximal de deux mots donnés $w$ et $w'$.
+
+  Cet algorithme est-il efficace? Pourquoi?
+\end{exercise}
+
+\medskip
+
+Pour éviter de répéter des calculs déjà effectués, on va utiliser une
+technique de {\em programmation dynamique} appelée {\em
+  memoisation}. Elle consiste simplement à stocker les valeurs déjà
+calculées d'une fonction, afin qu'à un appel ultérieure, on puisse
+retourner directement la valeur au lieu de la recalculer bêtement.
+\begin{exercise}
+  \'Ecrire une fonction:
+\begin{lstlisting}
+int memoized_lcs (char *v, char *w, int i, int j, int **computed); 
+\end{lstlisting}
+  prenant en paramètres deux mots $v=v_1\dots v_{n}$ et
+  $w = w_1\dots w_{m}$, deux indices $i$ et $j$, et une matrice
+  d'entiers \inlinec{computed} et renvoyant la longueur d'un plus long
+  sous-mot commun ({\em Longest Common Subsequence} en anglais) de
+  $v_1\dots v_i$ et $w_1\dots w_j$. On suppose que la matrice
+  \inlinec{computed} est de taille $(n+1) \times (m+1)$ (avec $n$ la
+  taille de $v$ et $m$ celle de $w$) et contient en case $(i,j)$
+  \begin{itemize}
+  \item soit la longueur, déjà calculée, d'un plus long sous-mot
+    commun à $v_1\dots v_i$ et $w_1\dots w_j$,
+  \item soit $-1$ si la valeur n'a pas encore été calculée.
+  \end{itemize}
+
+  En déduire une fonction efficace:
+\begin{lstlisting}
+int lcs (char *v, char *w);
+\end{lstlisting}
+  renvoyant la longueur d'un plus long sous-mot commun à $v$ et $w$.
+\end{exercise}
+
+\begin{exercise}
+  Améliorer les fonctions précédentes pour retourner effectivement un
+  sous-mot maximal commun de $v$ et $w$, et non plus seulement sa
+  longueur.
+\end{exercise}
+
+\section{Table de hashage}
+\label{sec:hash-table}
+
+Les tables de hashage sont le pendant informatique des partitions d'un
+ensemble. Partitionner un ensemble (fini) $S$ de taille
+$\lvert S \rvert$ en $m\in \mathbb N$ sous-ensembles est équivalent à
+se donner une fonction $h : S \to \{0,\dots,m-1\}$: en effet, une
+telle fonction étiquette chacun des éléments de $S$ avec le numéro $i$
+du sous-ensemble $h^{-1}(i)$ de la partition le contenant.
+
+En terme du langage {\tt C}, cela veut dire que si l'on dispose d'une
+fonction de la forme \inlinec{int h(typ x)} à valeurs dans
+$\{0,\dots,m-1\}$ pour un certain $m \in \mathbb N$, alors on peut
+représenter un ensemble fini $S$ d'éléments de type \inlinec{typ}
+comme un tableau de taille $m$ où la case indexée par \inlinec{i}
+contient les éléments \inlinec{x} de $S$ tels que \inlinec{h(x)}
+retourne \inlinec{i}. Encore faut-il trouver un moyen de ``faire
+rentrer'' tous ces éléments dans une même case... On peut utiliser
+toute les structures de données que vous avez pu voir, dépendamment de
+l'application.
+
+Pour ce TP, par souci de simplicité, on choisit d'utiliser des listes
+chaînées, c'est-à-dire que chaque case de notre table de hashage
+contiendra un pointeur vers le premier noeud d'une liste
+chaînée. Enfin, pour fixer les idées, le type abstrait \inlinec{typ}
+sera ici le type des couples d'entiers:
+\begin{lstlisting}
+struct coord_s {
+  int x,y;
+} coord_t;
+\end{lstlisting}
+
+\begin{exercise}[au tableau]
+  \'Ecrire des fichiers \shell{coord.c} et \shell{list.c} (et leurs
+  headers) permettant de manipuler les couples et les listes chaînées
+  de couples.
+\end{exercise}
+
+Dans un fichier \shell{hash.c}, on va implémenter la
+structure {\tt C} correspondant aux tables de hashage d'éléments de
+type \inlinec{coord_t}:
+\begin{lstlisting}
+struct hash_s {
+  int size; // size of table
+  list_t *table; // actual hash table
+};
+\end{lstlisting}
+Ici, on veut cacher les détails de l'implémentation à l'utilisateur de
+notre bibliothèque \shell{hash.c}. On va donc simplement
+lui donner accès à la structure via un pointeur dans \shell{hash.h}:
+\begin{lstlisting}
+#ifndef HASH_H
+#define HASH_H
+
+typedef struct hash_s* hash_t;
+
+// other function declarations
+
+#endif
+\end{lstlisting}
+Rappelez-vous qu'un tel \inlinec{typedef}, sans definition explicite
+de la structure dans le header, doit nécessairement porter sur un
+pointeur. Un simple
+\begin{lstlisting}
+typedef struct hash_s hash_t;
+
+\end{lstlisting}
+est prohibé: la déclaration d'une variable de type \inlinec{hash_t}
+par l'utilisateur n'ayant accès qu'au header serait alors un vrai
+casse-tête pour {\tt C}, qui, ne sachant pas combien de place allouer
+sur la pile d'exécution, préfère échouer à la compilation (erreur de
+type \shell{incomplete type}). L'allocation d'un pointeur en revanche
+ne pose aucun problème à {\tt C}: quelque soit l'objet vers lequel
+pointe celui-ci, il n'y a besoin que d'une case mémoire pouvant
+contenir une adresse de la RAM!
+
+\begin{exercise}
+  Proposer une fonction mathématique
+  \begin{displaymath}
+    h : \mathbb N\times \mathbb N\to \{0,\dots,m-1\}
+  \end{displaymath}
+  qui soit une bonne fonction de hashage. L'implémenter en {\tt C}.
+\end{exercise}
+
+\begin{exercise}
+  Ecrire les fonctions suivantes:
+\begin{lstlisting}
+// create a (chained) hash table of given size
+hash_t hash_init (int size);
+
+// insert key inside htab, with value val
+hash_t hash_ins (coord_t key, int val, hash_t htab);
+
+// remove key from htab
+hash_t hash_rem (coord_t key, hast_t htab);
+
+// search for key in htab, returns 1 if found, 0 otherwise
+char hash_mem (coord_t key, hast_t htab);
+
+// return value contained at key in htab
+// Careful: key should be member of htab
+int hash_getval (coord_t key, hast_t htab);
+\end{lstlisting}
+\end{exercise}
+
+\section{Pour le 6 décembre 2016}
+\label{sec:homeworks}
+
+\begin{exercise}~%
+  \begin{enumerate}[label=(\roman*)]
+  \item Modifier les fonctions du premier exercice afin d'afficher la
+    matrice \inlinec{computed} après l'appel à \inlinec{memoized_lcs}
+    sur la longueur de $v$ et $w$. Que remarquer? (Indice: utiliser de
+    grandes chaînes de caractères.)
+  \item Utiliser la structure de table de hashage mise au point dans
+    l'exercice 2 pour palier à ce problème.
+  \end{enumerate}
+\end{exercise}
+
+\end{document}

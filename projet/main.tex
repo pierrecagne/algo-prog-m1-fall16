@@ -49,7 +49,7 @@
 
 \title{Projet de programmation en {\tt C}:\\
   solveur de sudoku}
-\date{\`A rendre pour le 14 janvier 2017}
+\date{\`A rendre pour le 06 janvier 2017}
 \author{}
 \otherauthor{Pierre Cagne}
 \conf{%
@@ -372,10 +372,9 @@ $1$ dans chaque colonne.
   $(i_1,\dots,i_{k-1},i_{k+1},\dots,i_n)$ pour le problème présenté
   par la matrice obtenue à partir de $M$ comme suit:
   \begin{itemize}
-  \item on choisit un colonne $j$ pour laquelle la ligne $i$ a un $1$,
-  \item on enlève toute les lignes de $M$ qui ont un $1$ dans cette
-    colonne $j$,
-  \item on enlève également la colonne $j$.
+  \item on enlève toute les lignes de $M$ qui ont un $1$ dans toutes
+    les colonnes où la ligne $i$ en a un,
+  \item on enlève également les colonnes ayant un $1$ en ligne $i$.
   \end{itemize}
 
   \`A partir de cette observation, déterminer un algorithme récursif
@@ -585,7 +584,7 @@ Ce qu'il faut rendre, c'est un ensemble de fichiers \shell{.h} et
 fonction \inlinec{main} devra s'appeler \shell{main.c}. En
 particulier, la compilation avec la ligne de commande:
 \begin{lstlisting}[style={},style=sh]
-gcc -Wall -Wextra -o sudoku main.c
+gcc -Wall -Wextra -o sudoku *.c
 \end{lstlisting}
 ne devra retourner aucune erreur (le mieux étant qu'elle ne retourne
 aucun warning non plus).

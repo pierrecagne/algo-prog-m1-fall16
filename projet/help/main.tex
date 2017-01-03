@@ -1,0 +1,405 @@
+% !TEX program = lualatex
+\documentclass[french,10pt]{beamer}
+
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{fontspec}
+%\usepackage{unicode-math}
+\defaultfontfeatures{Ligatures=Common}
+\setmainfont{Cambria}
+\setsansfont{Calibri}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+\usepackage{stmaryrd}
+\usepackage{polyglossia}
+\usepackage{enumitem}
+\usepackage{tikz,tikz-cd}
+%\usepackage[explicit]{titlesec}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fmtcount}
+\usepackage{microtype} % uncomment for better rendering
+
+\usetikzlibrary{decorations.markings}
+
+\setmainlanguage{french}
+\setlist[itemize]{label=--}
+
+\lstdefinestyle{sh}{%
+  language=sh,%
+  basicstyle=\tt\small,%
+}
+\lstdefinestyle{C}{%
+  language=C,%
+  breaklines=true,%
+  %frame=l,%
+  xleftmargin=\parindent,%
+  basicstyle=\ttfamily\footnotesize,%
+  keywordstyle=\bfseries\color{green!40!black!80},%
+  showstringspaces=false,%
+  commentstyle=\itshape\color{purple!70},%
+  identifierstyle=\color{blue!80},%
+  stringstyle=\color{red!80},%
+  directivestyle=\color{orange!90!black!80},%
+  % otherkeywords={},%
+  % escapeinside={<latex>}{</latex>},%
+}
+\lstset{style=C}
+
+
+\title{UGMT41: aide au projet}
+\date{}
+\author{Pierre Cagne}
+
+\newcommand{\shell}[1]{\lstinline[style={},style=sh]|#1|}
+\newcommand{\inlinec}[1]{\lstinline[style=C]°#1°}
+
+\DeclareMathOperator{\powersetoperator}{\mathcal P}
+\newcommand{\powerset}[1]{\powersetoperator(#1)}
+
+\tikzset{frame/.style = {%
+    rounded corners,%
+    draw = black!20,%
+    line width = 1pt,%
+    fill = black!5
+  },%
+  translate/.style = {%
+    ->,%
+    line width = 7pt,%
+    red!60,%
+    >=stealth
+  }%
+}
+
+\def\possible{\color{structure.fg!60!black!70}}
+\def\constraint{\color{structure.fg!50!red!70}}
+\def\satisfaction{\color{structure.fg!60!green!70}}
+\def\solution{\color{red!70}}
+\def\property{\color{green!60!black!70}}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{Description du jeu de sudoku}
+  \begin{itemize}
+  \item {\color{structure.fg} Données:} une grille 9 par 9 (avec
+    certaines cases déjà remplies)
+  \item {\possible Remplissage:} chaque case peut contenir
+    un chiffre $1,2,\dots$ou $9$.
+  \item {\constraint Règles:}
+    \begin{enumerate}[label=\null]
+    \item toute case doit contenir un chiffre
+    \item chaque colonne contient un $1$, un $2$, $\dots$et un $9$
+    \item chaque ligne contient un $1$, un $2$, $\dots$et un $9$
+    \item chaque bloc contient un $1$, un $2$, $\dots$et un $9$
+    \end{enumerate}
+  \item {\solution Solution}: la sélection d'un remplissage
+    de chaque case, de sorte que chacune des règles est satisfaite une
+    unique fois.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Première traduction}
+  \begin{tikzpicture}[overlay,remember picture]
+    \node [frame,anchor=west,xshift=1em] (left) at (current page.west)
+    {%
+      \begin{minipage}{.49\linewidth}
+        \begin{itemize}
+        \item Problème: une {\em grille} avec
+          \begin{enumerate}[label=,leftmargin=5pt]\small
+          \item \possible remplissages possibles de cases,
+          \item \constraint règles
+          \end{enumerate}
+          \vskip 20pt%
+        \item Solution: une {\em sélection} de
+          \begin{center}
+            \solution \small remplissages pour chaque case
+          \end{center}
+          tels que
+          \begin{center} \property%
+            toute règle est satisfaite une unique fois
+          \end{center}
+        \end{itemize}
+      \end{minipage}
+    };%
+    \node [frame,anchor=east,xshift=-1em] (right) at (current
+    page.east) {%
+      \begin{minipage}{.49\linewidth}
+        \begin{itemize}
+        \item Problème: un {\em triplet}
+          \begin{displaymath}
+            ({\possible P}, {\constraint C}, {\satisfaction \mathcal S})
+          \end{displaymath}
+        \item Solution: une {\em sélection}
+          \begin{displaymath}
+            \color{red!70} %
+            p_0, p_1, \dots, p_n
+          \end{displaymath}
+          d'élément de $P$ tels que
+          \begin{center}
+            \color{green!60!black!70}%
+            toute contrainte est satisfaite par un unique $p_i$
+          \end{center}
+        \end{itemize}
+      \end{minipage}
+    };%
+    %
+    \draw [translate] (left.east) to (right.west);
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Deuxième traduction}
+  \begin{tikzpicture}[overlay,remember picture]
+    \node [frame,anchor=west,xshift=1em] (left) at (current page.west)
+    {%
+      \begin{minipage}{.49\linewidth}
+        \begin{itemize}
+        \item Problème: un {\em triplet}
+          \begin{displaymath}
+            ({\possible P}, {\constraint C}, {\satisfaction \mathcal S})
+          \end{displaymath}
+        \item Solution: une {\em sélection}
+          \begin{displaymath}
+            \solution %
+            p_0, p_1, \dots, p_n
+          \end{displaymath}
+          d'élément de $P$ tels que
+          \begin{center}
+            \property %
+            toute contrainte est satisfaite par un unique $p_i$
+          \end{center}
+        \end{itemize}
+      \end{minipage}
+    };%
+    \node [frame,anchor=east,xshift=-1em] (right) at (current
+    page.east) {%
+      \begin{minipage}{.49\linewidth}
+        \begin{itemize}
+        \item Problème: une {\em matrice}
+          \begin{displaymath} %
+            M = (m_{{\possible i},{\constraint j}})\quad%
+            m_{{\possible i},{\constraint j}} \in {\satisfaction \{ 0,1 \}}
+          \end{displaymath}
+        \item Solution: une {\em sélection} 
+          \begin{displaymath}
+            \solution %
+            \ell_0, \ell_1, \dots, \ell_n
+          \end{displaymath}
+          de lignes de $M$ tels que
+          \begin{center}
+            \property %
+            toute colonne contient un unique $1$ parmi les lignes
+            $\ell_i$
+          \end{center}
+        \end{itemize}
+      \end{minipage}
+    };%
+    %
+    \draw [translate] (left.east) to (right.west);
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Algorithme récursif}
+  \begin{tikzpicture}[overlay,remember picture]
+    \node [frame,anchor=west,xshift=1em] (left) at (current page.west)
+    {%
+      \begin{minipage}{.49\linewidth}
+        Une solution
+        \begin{displaymath}
+          \solution %
+          p_0, p_1, \dots, p_n
+        \end{displaymath}
+        de $({\possible P},{\constraint C},{\satisfaction\mathcal S})$
+        est exactement la donnée
+        \begin{itemize}
+        \item de ${\constraint c \in C}$ et ${\solution p_i}$ avec
+          $p_i \mathrel{\mathcal S} c$
+        \item et d'une solution
+          \begin{displaymath}
+            \solution %
+            p_0,p_1,\dots,\widehat{p_i},\dots,p_n
+          \end{displaymath}
+          de
+          $({\possible P'}, {\constraint C'}, {\satisfaction \mathcal
+            S})$ où
+          \begin{enumerate}[label=,leftmargin=0pt]
+          \item
+            $\possible P' = \{p : \forall c, p_i \mathrel{\mathcal S}c
+            \mathrel\Rightarrow p \mathrel{\not \kern-2pt\mathcal S} c
+            \}$
+          \item $\constraint C' = \{c : p \mathrel{\not \kern-2pt\mathcal S} c \}$ 
+          \end{enumerate}
+        \end{itemize}
+      \end{minipage}
+    };%
+    \node [frame,anchor=east,xshift=-1em] (right) at (current
+    page.east) {%
+      \begin{minipage}{.49\linewidth}
+        Une solution
+        \begin{displaymath}
+          \solution %
+          \ell_0, \ell_1, \dots, \ell_n
+        \end{displaymath}
+        de $M =(m_{i,j})$ est exactement la donnée
+        \begin{itemize}
+        \item de ${\constraint k}$ et ${\solution \ell_i}$ avec
+          $m_{\ell_i,k} = 1$
+        \item et d'une solution
+          \begin{displaymath}
+            \solution %
+            \ell_0,\ell_1,\dots,\widehat{\ell_i},\dots,\ell_n
+          \end{displaymath}
+          de la sous-matrice $M'$ de $M$ après
+          \begin{enumerate}[label=,leftmargin=0pt]\small%
+          \item \possible suppression des lignes ayant un $1$ au même
+            colonne que la ligne $\ell_i$
+          \item \constraint suppression des colonnes ayant un $1$ dans
+            la ligne $\ell_i$
+          \end{enumerate}
+        \end{itemize}
+      \end{minipage}
+    };%
+    %
+    \draw [translate] (left.east) to (right.west);
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}[fragile]{Un mot sur l'implémentation}
+  \begin{tikzpicture}[overlay,remember picture]
+    \node [frame,anchor=west,xshift=1em] (left) at (current page.west)
+    {%
+      \begin{minipage}{.55\linewidth}
+        \centering%
+        \scalebox{.5}{%
+          \begin{tikzpicture}[pointers/.style={%
+              postaction={decorate},decoration={markings, mark=at position
+                0.8 with {\arrow{>}}},shorten >=4pt%
+            },%
+            box/.style={solid,thin},%
+            every node/.style={minimum height=2em,minimum width=2em}%
+            ]
+            %% create nodes
+            \node (root) at (0,0) {$\phantom{C_1}$};%
+            \node (c1) at (2,0) {$C_1$};%
+            \node (c2) at (4,0) {$C_2$};%
+            \node (c3) at (6,0) {$C_3$};%
+            \node (c4) at (8,0) {$C_4$};%
+            \node (c5) at (10,0) {$C_5$};%
+            \node (c12) at (2,-4) {\color{lightgray} 1};%
+            \node (c14) at (2,-8) {\color{lightgray} 1};%
+            \node (c21) at (4,-2) {\color{lightgray} 1};%
+            \node (c23) at (4,-6) {\color{lightgray} 1};%
+            \node (c33) at (6,-6) {\color{lightgray} 1};%
+            \node (c35) at (6,-10) {\color{lightgray} 1};%
+            \node (c42) at (8,-4) {\color{lightgray} 1};%
+            \node (c51) at (10,-2) {\color{lightgray} 1};%
+            \node (c52) at (10,-4) {\color{lightgray} 1};%
+            \node (c54) at (10,-8) {\color{lightgray} 1};%
+            %% box them and base for pointers
+            \foreach \x in
+            {root,c1,c2,c3,c4,c5,c12,c14,c21,c23,c33,c35,c42,c51,c52,c54} {%
+              \fill[black] (\x.north east) circle (1pt);%
+              \fill[black] (\x.north west) circle (1pt);%
+              \fill[black] (\x.south east) circle (1pt);%
+              \fill[black] (\x.south west) circle (1pt);%
+              \path (\x.north west) ++ (135:5pt) coordinate (p1) ;%
+              \path (\x.north east) ++ (45:5pt) coordinate (p2) ;%
+              \path (\x.south east) ++ (-45:5pt) coordinate (p3) ;%
+              \path (\x.south west) ++ (-135:5pt) coordinate (p4) ;%
+              \draw[box] (p1) -- (p2) -- (p3) -- (p4) -- cycle;%
+            }%
+            %% draw lines
+            \foreach \x/\y in
+            {root/c1,c1/c2,c2/c3,c3/c4,c4/c5,c21/c51,c12/c42,c42/c52,
+              c23/c33,c14/c54} {%
+              \draw[pointers] (\x.north east) to (\y.north west); %
+              \draw[pointers] (\y.south west) to (\x.south east);%
+            }%
+            %% draw columns
+            \foreach \x/\y in
+            {c1/c12,c12/c14,c2/c21,c21/c23,c3/c33,c33/c35,c4/c42,
+              c5/c51,c51/c52,c52/c54} {%
+              \draw[pointers] (\x.south east) to (\y.north east); %
+              \draw[pointers] (\y.north west) to (\x.south west);%
+            }%
+            %% the rest manually
+            %% horizontally
+            \draw[pointers,shorten >=0pt] (root.south west) to ++(-1/2,0);%
+            \draw[pointers,shorten >=0pt] (c12.south west) to ++(-2.5,0);%
+            \draw[pointers,shorten >=0pt] (c14.south west) to ++(-2.5,0);%
+            \draw[pointers,shorten >=0pt] (c21.south west) to ++(-4.5,0);%
+            \draw[pointers,shorten >=0pt] (c23.south west) to ++(-4.5,0);%
+            \draw[pointers,shorten >=0pt] (c35.south west) to ++(-6.5,0);%
+            % 
+            \draw[pointers] (root.north west) ++(-1/2,0) to
+            (root.north west);%
+            \draw[pointers] (c12.north west) ++(-2.5,0) to
+            (c12.north west);%
+            \draw[pointers] (c14.north west) ++(-2.5,0) to
+            (c14.north west);%
+            \draw[pointers] (c21.north west) ++(-4.5,0) to
+            (c21.north west);%
+            \draw[pointers] (c23.north west) ++(-4.5,0) to
+            (c23.north west);%
+            \draw[pointers] (c35.north west) ++(-6.5,0) to
+            (c35.north west);%
+            % 
+            \draw[pointers,shorten >=0pt] (c5.north east) to ++(1/2,0);%
+            \draw[pointers,shorten >=0pt] (c51.north east) to ++(.5,0);%
+            \draw[pointers,shorten >=0pt] (c52.north east) to ++(.5,0);%
+            \draw[pointers,shorten >=0pt] (c54.north east) to ++(.5,0);%
+            \draw[pointers,shorten >=0pt] (c33.north east) to ++(4.5,0);%
+            \draw[pointers,shorten >=0pt] (c35.north east) to ++(4.5,0);%
+            % 
+            \draw[pointers] (c5.south east) ++(1/2,0) to (c5.south east);%
+            \draw[pointers] (c51.south east) ++(.5,0) to (c51.south east);%
+            \draw[pointers] (c52.south east) ++(.5,0) to (c52.south east);%
+            \draw[pointers] (c54.south east) ++(.5,0) to (c54.south east);%
+            \draw[pointers] (c33.south east) ++(4.5,0) to (c33.south east);%
+            \draw[pointers] (c35.south east) ++(4.5,0) to (c35.south east);%
+            %% 
+            %% vertically
+            \foreach \x in {c1,c2,c3,c4,c5} {%
+              \draw[pointers,shorten >=0pt] (\x.north west) to ++(0,.5);%
+              \draw[pointers] (\x.north east) ++(0,.5) to (\x.north east);%
+            }%
+            \draw[pointers,shorten >=0pt] (c14.south east) to ++(0,-2.5);%
+            \draw[pointers,shorten >=0pt] (c54.south east) to ++(0,-2.5);%
+            \draw[pointers,shorten >=0pt] (c23.south east) to ++(0,-4.5);%
+            \draw[pointers,shorten >=0pt] (c35.south east) to ++(0,-.5);%
+            \draw[pointers,shorten >=0pt] (c42.south east) to ++(0,-6.5);%
+            
+            \draw[pointers] (c14.south west) ++(0,-2.5) to (c14.south west);%
+            \draw[pointers] (c54.south west) ++(0,-2.5) to (c54.south west);%
+            \draw[pointers] (c23.south west) ++(0,-4.5) to (c23.south west);%
+            \draw[pointers] (c35.south west) ++(0,-.5) to (c35.south west);%
+            \draw[pointers] (c42.south west) ++(0,-6.5) to (c42.south west);%
+          \end{tikzpicture}%
+        }%
+      \end{minipage}
+    };%
+    \node [frame,anchor=east,xshift=-1em] (right) at (current
+    page.east) {%
+      \begin{minipage}{.5\linewidth}
+\begin{lstlisting}
+typedef struct node_s node_t;
+struct node_s {
+  node_t *left, *right,
+         *up, *down;
+  /* etc. */
+};
+\end{lstlisting}
+\begin{lstlisting}
+typedef struct column_s column_t;
+struct column_s {
+  node_t head;
+  column_t *left, *right;
+  /* etc. */
+};
+\end{lstlisting}
+      \end{minipage}
+    };%
+  \end{tikzpicture}
+\end{frame}
+
+\end{document}
