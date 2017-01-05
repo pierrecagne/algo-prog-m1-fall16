@@ -5,10 +5,12 @@
 #include "list.h"
 #include "dlx.h"
 
+char **oneltogrid (char *line);
+
 int main(int argc, char** argv) {
 
-  char **grid = sudoku_filetogrid("sudoku_test");
-  printf("Sudoku to solve:\n%s\n", sudoku_gridtostr(grid));
+  /* char **grid = sudoku_filetogrid("sudoku_test"); */
+  /* printf("Sudoku to solve:\n%s\n", sudoku_gridtostr(grid)); */
 
   /* lol_t lines = lol_new(); */
   /* for (size_t i = 0; i < 9 ; i++) { */
@@ -27,34 +29,69 @@ int main(int argc, char** argv) {
 
   /* printf ("head: %d\n", (int) list_head(li)); */
 
-  printf ("\n####\n\n");
+  /* printf ("\n####\n\n"); */
 
-  dlx_data root = dlx_new();
-  for(int i = 7; i >= 1; i--)
-    root = dlx_add_column((idcolumn_t) i,root);
-  list_t row[6];
-  row[5] = list_cons(4,list_cons(5,list_cons(7,list_new())));
-  row[4] = list_cons(2,list_cons(7,list_new()));
-  row[3] = list_cons(1,list_cons(4,list_new()));
-  row[2] = list_cons(2,list_cons(3,list_cons(6,list_new())));
-  row[1] = list_cons(1,list_cons(4,list_cons(7,list_new())));
-  row[0] = list_cons(3,list_cons(5,list_cons(6,list_new())));
-  for (int i = 6; i >= 1; i--)
-    root = dlx_add_row((idrow_t) 11*i, row[i-1], root);
+  /* dlx_data root = dlx_new(); */
+  /* for(int i = 7; i >= 1; i--) */
+  /*   root = dlx_add_column((idcolumn_t) i,root); */
+  /* list_t row[6]; */
+  /* row[5] = list_cons(4,list_cons(5,list_cons(7,list_new()))); */
+  /* row[4] = list_cons(2,list_cons(7,list_new())); */
+  /* row[3] = list_cons(1,list_cons(4,list_new())); */
+  /* row[2] = list_cons(2,list_cons(3,list_cons(6,list_new()))); */
+  /* row[1] = list_cons(1,list_cons(4,list_cons(7,list_new()))); */
+  /* row[0] = list_cons(3,list_cons(5,list_cons(6,list_new()))); */
+  /* for (int i = 6; i >= 1; i--) */
+  /*   root = dlx_add_row((idrow_t) 11*i, row[i-1], root); */
   
-  dlx_print(root);
+  /* dlx_print(root); */
 
-  lol_t res = dlx_solve(root);
+  /* lol_t res = dlx_solve(root); */
 
-  printf("\n###solutions:\n");
-  for(; res; res = lol_tail(res)) {
-    list_t li = lol_head(res);
-    for(; li; li = list_tail(li))
-      printf ("row:%d    ",(int) list_head(li));
-    printf("\n");
+  /* printf("\n###solutions:\n"); */
+  /* for(; res; res = lol_tail(res)) { */
+  /*   list_t li = lol_head(res); */
+  /*   for(; li; li = list_tail(li)) */
+  /*     printf ("row:%d    ",(int) list_head(li)); */
+  /*   printf("\n"); */
+  /* } */
+  
+  /* dlx_destruct(root); */
+
+  /* dlx_data sudokudlx = sudoku_gridtodlx(grid); */
+
+  /* char **sol = sudoku_solve(grid); */
+  /* sudoku_print(sol); */
+
+  FILE *db = fopen("others_ER11.txt","r");
+  char buf[1000]; size_t count = 1;
+  while(fgets(buf,1000,db)) {
+    char **grid = oneltogrid(buf);
+    char **sol = sudoku_solve(grid);
+    if (!sudoku_check(sol,grid)) {
+      printf ("Test %d: failure.\n", (int) count++);
+      printf ("Original:\n"); sudoku_print(grid);
+      printf ("Solution (bad!):\n"); sudoku_print(sol);
+    }
   }
+
+  printf ("All test successfully passed!\n");
   
-  dlx_destruct(root);
+  /* dlx_print(sudokudlx); */
+
+  /* dlx_destruct(sudokudlx); */
   
   return EXIT_SUCCESS;
+}
+
+char **oneltogrid (char *line) {
+  char **grid = (char **) malloc(sizeof(char*)*9);
+  for(size_t i = 0; i < 9; i++)
+    grid[i] = (char *) malloc(sizeof(char)*9);
+
+  for(size_t i = 0 ; i < 81; i++)
+    if (line[i] < '0' || line[i] > '9') grid[i/9][i%9] = 0;
+    else grid[i/9][i%9] = line[i] - '0';
+  
+  return grid;
 }

@@ -11,6 +11,8 @@
 #ifndef SUDOKU_H
 #define SUDOKU_H
 
+#include "dlx.h"
+
 /*
   returns the 9 by 9 grid corresponding to the sudoku contains in the
   file at path; 0s correspond to empty cells.
@@ -21,12 +23,18 @@ char **sudoku_filetogrid (char *path);
   returns the constraint satisfaction problem in form of a DLX data as
   described by Knuth in his "dancing links" paper.
 */
-//dlx_data sudoku_gridtodlx (char **grid);
+dlx_data sudoku_gridtodlx (char **grid);
 
 /*
   returns the completed sudoku grid(s) (no 0s).
 */
-//char **sudoku_solvefromdlx (dlx_data dlx);
+char **sudoku_solve (char **grid);
+
+/*
+  check if a completed grid is actually a solution of a given sudoku
+  grid.
+*/
+char sudoku_check (char **sol, char** grid);
 
 /*
   returns a string containing a sudoku in a grid form
