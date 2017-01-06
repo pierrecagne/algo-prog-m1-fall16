@@ -31,10 +31,17 @@ dlx_data sudoku_gridtodlx (char **grid);
 char **sudoku_solve (char **grid);
 
 /*
+  same as sudoku_solve but does not check for unique solution, and
+  prints out every solution.
+*/
+void sudoku_print_all_solutions (char **grid);
+
+/*
   check if a completed grid is actually a solution of a given sudoku
   grid.
 */
 char sudoku_check (char **sol, char** grid);
+char sudoku_check_fast (char **sol, char** grid);
 
 /*
   returns a string containing a sudoku in a grid form

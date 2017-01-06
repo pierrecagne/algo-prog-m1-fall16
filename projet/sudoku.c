@@ -13,6 +13,7 @@
 #include "error.h"
 #include "dlx.h"
 #include "list.h"
+#include "sudoku.h"
 
 /*
   returns the 9 by 9 grid corresponding to the sudoku contains in the
@@ -44,9 +45,9 @@ char **sudoku_filetogrid (char *path){
       }
       grid[i][j] = ((char) c) - '0'; // convert c into the integer it contains
     }
-    // each line ends with a '\n'
+    // each line ends with a '\n', except maybe the last one
     int c = fgetc(file);
-    if (c != '\n') {
+    if (c != '\n' && i != 8) {
 	char msg[ERROR_MAX];
 	(void) sprintf(msg, "Unexpected EOF: file %s probably not in sudoku format", path);
 	error_handle(msg);
@@ -155,10 +156,9 @@ static list_t get_constraint (size_t i, size_t j, size_t n) {
 			     list_cons((idcolumn_t) (i*100+n),
 				       list_cons((idcolumn_t) (i*100+j*10),list_new()))));
 }
-			     
       
 /*
-  returns the completed sudoku grid(s) (no 0s).
+  returns the completed sudoku grid.
 */
 char **sudoku_solve (char **grid) {
   // get the solutions
@@ -193,6 +193,45 @@ char **sudoku_solve (char **grid) {
 }
 
 /*
+  same as sudoku_solve but does not check for unique solution, and
+  prints out every solution.
+*/
+void sudoku_print_all_solutions (char **grid) {
+  // get the solutions
+  dlx_data dlxsol = sudoku_gridtodlx(grid);
+  lol_t sols = dlx_solve(dlxsol);
+
+  // if no solutions
+  /* if (!sols) error_handle("No solution found: invalid sudoku."); */
+  
+  /* lol_t tail = lol_tail(sols); */
+  /* // if more than one solution */
+  /* if (tail) error_handle("More than one solution: invalid sudoku."); */
+
+  // allocate memory for solution grid
+  char **sol = (char **) malloc(sizeof(char *)*9);
+  for(size_t i = 0; i < 9; i++)
+    sol[i] = (char *) malloc(sizeof(char)*9);
+
+  for(; sols; sols = lol_tail(sols)) {
+    list_t head = lol_head(sols);
+    for(; head; head = list_tail(head)) {
+      idrow_t id = list_head(head);
+      char n = (char) (id % 10); id /= 10;
+      size_t j = (size_t) (id % 10); id /= 10;
+      size_t i = (size_t) (id % 10); id /= 10;
+      if (id) error_handle("Invalid id for a row");
+      sol[i-1][j-1] = n;
+    }
+    sudoku_print(sol); printf("\n");
+  }
+
+  dlx_destruct(dlxsol);
+
+  return;
+}
+
+/*
   checks if a completed grid is actually a solution of a given sudoku
   grid; returns 1 if everything is ok, 0 otherwise.
 
@@ -203,13 +242,22 @@ char sudoku_check (char **sol, char** grid) {
     for(size_t j = 0; j < 9; j++) {
       char n = sol[i][j];
       // if pre-filled cell does not match solution cell
-      if (grid[i][j] && (n != grid[i][j])) {printf("i:%d, j:%d, prefilled\n",(int) (i+1), (int) (j+1)); return 0;}
+      if (grid[i][j] && (n != grid[i][j])) {
+	printf("i:%d, j:%d, prefilled\n",(int) (i+1), (int) (j+1));
+	return 0;
+      }
       // check row
       for(size_t jj = 0; jj < 9; jj++)
-	if(jj != j && grid[i][jj] == n) {printf("i:%d, j:%d, row\n",(int) (i+1), (int) (j+1)); return 0;}
+	if(jj != j && grid[i][jj] == n) {
+	  printf("i:%d, j:%d, row\n",(int) (i+1), (int) (j+1));
+	  return 0;
+	}
       // check column
       for(size_t ii = 0; ii < 9; ii++)
-	if(ii != i && grid[ii][j] == n) {printf("i:%d, j:%d, column\n",(int) (i+1), (int) (j+1)); return 0;}
+	if(ii != i && grid[ii][j] == n) {
+	  printf("i:%d, j:%d, column\n",(int) (i+1), (int) (j+1));
+	  return 0;
+	}
       // check block
       size_t iblock = 3*(i/3), jblock = 3*(j/3);
       /* 
@@ -218,7 +266,54 @@ char sudoku_check (char **sol, char** grid) {
       */
       for(size_t ii = iblock; ii < iblock+3; ii++)
 	for(size_t jj = jblock; jj < jblock+3; jj++)
-	  if(ii != i && jj != j && grid[ii][jj] == n) {printf("i:%d, j:%d, block\n",(int) (i+1), (int) (j+1)); printf("ii:%d, jj:%d, block\n",(int) (ii+1), (int) (jj+1)); return 0;}
+	  if(ii != i && jj != j && grid[ii][jj] == n) {
+	    printf("i:%d, j:%d, block\n",(int) (i+1), (int) (j+1));
+	    printf("ii:%d, jj:%d, block\n",(int) (ii+1), (int) (jj+1));
+	    return 0;}
+    }
+
+  // if we made it here, the solution is correct
+  return 1;
+}
+
+/*
+  same as sudoku_check but faster: instead of checking that every cell
+  is unique in its row, its column and its block, it just reads once
+  every cell and switch a bit saying the corresponding row, column and
+  block actually contain the digit of the cell.
+*/
+char sudoku_check_fast (char **sol, char** grid) {
+  /*
+    rows[i] is a 9-bit integer; if it jth bit is 1, it means a digit
+    (j+1) has been detected in row (i+1).
+
+    
+    columns[i] is a 9-bit integer; if it jth bit is 1, it means a
+    digit (j+1) has been detected in columns (i+1).
+
+
+    blocks[i] is a 9-bit integer; if it jth bit is 1, it means a digit
+    (j+1) has been detected in block (i+1).
+  */
+  int rows[9] = {0}, columns[9] = {0}, blocks[9] = {0};
+  
+  for(size_t i = 0; i < 9; i++)
+    for(size_t j = 0; j < 9; j++) {
+      char n = sol[i][j];
+      // if pre-filled cell does not match solution cell
+      if (grid[i][j] && (n != grid[i][j])) {
+	printf("i:%d, j:%d, prefilled\n",(int) (i+1), (int) (j+1));
+	return 0;
+      }
+      // update row
+      if (!((rows[i]>>sol[i][j]) ^ 1)) return 0;
+      rows[i] |= 1 << sol[i][j];
+      // update column
+      if (!((columns[j]>>sol[i][j]) ^ 1)) return 0;
+      columns[j] |= 1 << sol[i][j];
+      // update block
+      if (!((blocks[3*(i/3)+j/3]>>sol[i][j]) ^ 1)) return 0;
+      blocks[3*(i/3)+j/3] |= 1 << sol[i][j];
     }
 
   // if we made it here, the solution is correct

@@ -2,84 +2,38 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "sudoku.h"
+#include "error.h"
 #include "list.h"
 #include "dlx.h"
 
 char **oneltogrid (char *line);
+void optargs (char **argv, int *pos);
+void check (char *pgm);
+void database (char *path);
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
 
-  /* char **grid = sudoku_filetogrid("sudoku_test"); */
-  /* printf("Sudoku to solve:\n%s\n", sudoku_gridtostr(grid)); */
+  /*
+    path: array of path to sudoku files
+    npath: number of paths given in args
+  */
+  char **path = malloc(sizeof(char*)*(argc-1)); int npath = 0; 
 
-  /* lol_t lines = lol_new(); */
-  /* for (size_t i = 0; i < 9 ; i++) { */
-  /*   list_t list = list_new(); */
-  /*   for (size_t j = 0; j < 9; j++) { */
-  /*     if (i == 2 && j == 1) printf ("cell (2,1) is: %d\n", (int) grid[i][j]); */
-  /*     list = list_cons((idrow_t) grid[i][j], list); */
-  /*   } */
-  /*   lines = lol_cons(list,lines); */
-  /* } */
-
-  /* printf ("\n####\n\n"); */
-
-  /* idcolumn_t id1 = 3, id2 = 101; */
-  /* list_t li = list_cons(id1,list_cons(id2,list_new())); */
-
-  /* printf ("head: %d\n", (int) list_head(li)); */
-
-  /* printf ("\n####\n\n"); */
-
-  /* dlx_data root = dlx_new(); */
-  /* for(int i = 7; i >= 1; i--) */
-  /*   root = dlx_add_column((idcolumn_t) i,root); */
-  /* list_t row[6]; */
-  /* row[5] = list_cons(4,list_cons(5,list_cons(7,list_new()))); */
-  /* row[4] = list_cons(2,list_cons(7,list_new())); */
-  /* row[3] = list_cons(1,list_cons(4,list_new())); */
-  /* row[2] = list_cons(2,list_cons(3,list_cons(6,list_new()))); */
-  /* row[1] = list_cons(1,list_cons(4,list_cons(7,list_new()))); */
-  /* row[0] = list_cons(3,list_cons(5,list_cons(6,list_new()))); */
-  /* for (int i = 6; i >= 1; i--) */
-  /*   root = dlx_add_row((idrow_t) 11*i, row[i-1], root); */
-  
-  /* dlx_print(root); */
-
-  /* lol_t res = dlx_solve(root); */
-
-  /* printf("\n###solutions:\n"); */
-  /* for(; res; res = lol_tail(res)) { */
-  /*   list_t li = lol_head(res); */
-  /*   for(; li; li = list_tail(li)) */
-  /*     printf ("row:%d    ",(int) list_head(li)); */
-  /*   printf("\n"); */
-  /* } */
-  
-  /* dlx_destruct(root); */
-
-  /* dlx_data sudokudlx = sudoku_gridtodlx(grid); */
-
-  /* char **sol = sudoku_solve(grid); */
-  /* sudoku_print(sol); */
-
-  FILE *db = fopen("others_ER11.txt","r");
-  char buf[1000]; size_t count = 1;
-  while(fgets(buf,1000,db)) {
-    char **grid = oneltogrid(buf);
-    char **sol = sudoku_solve(grid);
-    if (!sudoku_check(sol,grid)) {
-      printf ("Test %d: failure.\n", (int) count++);
-      printf ("Original:\n"); sudoku_print(grid);
-      printf ("Solution (bad!):\n"); sudoku_print(sol);
-    }
+  // check arguments and their forms
+  if (argc < 2) error_usage(argv[0]);
+  else {
+    int i = 1;
+    while(i < argc)
+      if (argv[i][0] == '-') optargs(argv, &i);
+      else { path[npath++] = argv[i++]; }
   }
+  // at least a path should be given
+  if (!npath) error_usage(argv[0]);
 
-  printf ("All test successfully passed!\n");
-  
-  /* dlx_print(sudokudlx); */
-
-  /* dlx_destruct(sudokudlx); */
+  while(npath) {
+    sudoku_print_all_solutions(sudoku_filetogrid(*path));
+    path++; npath--;
+  }
   
   return EXIT_SUCCESS;
 }
@@ -94,4 +48,57 @@ char **oneltogrid (char *line) {
     else grid[i/9][i%9] = line[i] - '0';
   
   return grid;
+}
+
+void optargs (char **argv, int *pos) {
+  if (argv[*pos][1] == 'h') {
+    (*pos)++;
+    printf("\
+%s: help\n\
+usage: %s [-h] [-c pgm] [-db] [file ...]\n\n\
+- if -h is given, prints this help menu and quit.\n\
+- if -c pgm is given, check a number of test files again the response of pgm on it.\n\
+- if -db is given, file should be a database (oneline sudokus);\n\
+  -db should be given as last option\
+- file should be a path to a sudoku file; can be ommited only if -h or -c is given.\n",argv[0],argv[0]);
+    exit(EXIT_SUCCESS);
+  }
+  if (argv[*pos][1] == 'c') {
+    check(argv[(*pos)+1]); *pos += 2;
+  }
+  if (argv[*pos][1] == 'd' && argv[*pos][2] == 'b') {
+    database(argv[(*pos)+1]); *pos += 1;
+  }
+  else error_handle ("illegal option");
+  return;
+}
+
+void check (char *pgm) {
+  for(int i = 1; i <= 375; i++) {
+    char name[100]; sprintf(name, "test_files/test%d.sudoku", i);
+    char **grid = sudoku_filetogrid(name);
+    char cmd[200]; sprintf(cmd, "%s %s > tmp_out_file", pgm, name);
+    system(cmd);
+    char **stud = sudoku_filetogrid("tmp_out_file");
+    // sudoku_print(stud);
+    if (!sudoku_check(stud,grid)) {
+      char msg[ERROR_MAX]; sprintf(msg,"test %d failed", i);
+      error_handle(msg);
+    }
+  }
+
+  printf("All test successfully passed.\n");
+  exit(EXIT_SUCCESS);
+}
+
+void database (char *path) {
+  FILE *db = fopen(path,"r");
+  char buf[500];
+  while(fgets(buf,500,db)) {
+    char **grid = oneltogrid(buf);
+    char **sol = sudoku_solve(grid);
+    if (!sudoku_check(sol,grid)) error_handle("failure");
+  }
+  printf("All test passed!\n");
+  exit(EXIT_SUCCESS);
 }

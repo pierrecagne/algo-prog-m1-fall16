@@ -17,5 +17,6 @@
   then quit with failure status.
 */
 void error_handle (char *msg);
+void error_usage (char *name);
 
 #endif
